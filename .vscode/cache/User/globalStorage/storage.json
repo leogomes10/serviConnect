@@ -1,0 +1,77 @@
+{
+    "telemetry.machineId": "3c935efed3ab5e9b7f0d6cc003c959904fc2b951d15f07693ce45fdf31abbe65",
+    "telemetry.devDeviceId": "42ad902e-28a6-453e-a347-2bf1da59b45c",
+    "telemetry.sqmId": "{25D14BAC-5C01-49B9-8D0B-A2DF608754A9}",
+    "backupWorkspaces": {
+        "workspaces": [],
+        "folders": [
+            {
+                "folderUri": "file:///c%3A/Users/leogo/serviConnect"
+            }
+        ],
+        "emptyWindows": []
+    },
+    "windowControlHeight": 35,
+    "profileAssociations": {
+        "workspaces": {
+            "file:///c%3A/Users/leogo/serviConnect": "__default__profile__"
+        },
+        "emptyWindows": {}
+    },
+    "theme": "vs-dark",
+    "themeBackground": "#121314",
+    "windowSplash": {
+        "zoomLevel": 0,
+        "baseTheme": "vs-dark",
+        "colorInfo": {
+            "foreground": "#bfbfbf",
+            "background": "#121314",
+            "editorBackground": "#121314",
+            "titleBarBackground": "#191a1b",
+            "titleBarBorder": "#2a2b2c",
+            "activityBarBackground": "#191a1b",
+            "activityBarBorder": "#2a2b2c",
+            "sideBarBackground": "#191a1b",
+            "sideBarBorder": "#2a2b2c",
+            "statusBarBackground": "#191a1b",
+            "statusBarBorder": "#2a2b2c",
+            "statusBarNoFolderBackground": "#191a1b"
+        },
+        "layoutInfo": {
+            "sideBarSide": "left",
+            "editorPartMinWidth": 220,
+            "titleBarHeight": 35,
+            "activityBarWidth": 48,
+            "sideBarWidth": 300,
+            "auxiliaryBarWidth": 300,
+            "statusBarHeight": 22,
+            "windowBorder": false
+        }
+    },
+    "windowSplashWorkspaceOverride": {
+        "layoutInfo": {
+            "sideBarWidth": 300,
+            "auxiliaryBarWidth": 300,
+            "workspaces": {
+                "9889f3dc94b14e63320cedb16cca68d1": {
+                    "sideBarVisible": true,
+                    "auxiliaryBarVisible": true
+                }
+            }
+        }
+    },
+    "windowsState": {
+        "lastActiveWindow": {
+            "folder": "file:///c%3A/Users/leogo/serviConnect",
+            "backupPath": "C:\\Users\\leogo\\serviConnect\\.vscode\\cache\\Backups\\9d17fd1fbfd5176d50f81f3bfeca9042",
+            "uiState": {
+                "mode": 1,
+                "x": 48,
+                "y": 0,
+                "width": 1440,
+                "height": 816
+            }
+        },
+        "openedWindows": []
+    }
+}
