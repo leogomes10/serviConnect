@@ -11,8 +11,9 @@ export default function App() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await fetch('/api/services');
+        const response = await fetch('http://localhost:5000/profissionais');
         const data = await response.json();
+        console.log("Dados carregados do banco:", data); // Verifique isso no F12
         setServices(data);
       } catch (error) {
         console.error('Erro ao buscar serviços:', error);
@@ -25,17 +26,18 @@ export default function App() {
   }, []);
 
   const getCategoryIcon = (category: string) => {
-    switch (category.toLowerCase()) {
-      case 'elétrica': return <Zap className="w-5 h-5 text-yellow-500" />;
-      case 'hidráulica': return <Droplets className="w-5 h-5 text-blue-500" />;
-      case 'pintura': return <Paintbrush className="w-5 h-5 text-purple-500" />;
-      default: return <Wrench className="w-5 h-5 text-gray-500" />;
-    }
-  };
+  // O "category || ''" evita o erro se o valor vier nulo
+  switch ((category || '').toLowerCase()) {
+    case 'elétrica': return <Zap className="w-5 h-5 text-yellow-500" />;
+    case 'hidráulica': return <Droplets className="w-5 h-5 text-blue-500" />;
+    case 'pintura': return <Paintbrush className="w-5 h-5 text-purple-500" />;
+    default: return <Wrench className="w-5 h-5 text-gray-500" />;
+  }
+};
 
   const filteredServices = services.filter(s => 
-    s.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.category.toLowerCase().includes(searchTerm.toLowerCase())
+    s.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.servico.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -114,7 +116,7 @@ export default function App() {
                   >
                     <div className="flex justify-between items-start mb-4">
                       <div className="bg-slate-50 p-3 rounded-xl group-hover:bg-indigo-50 transition-colors">
-                        {getCategoryIcon(service.category)}
+                        {getCategoryIcon(service.servico)}
                       </div>
                       <div className="flex items-center gap-1 text-xs font-bold text-amber-500 bg-amber-50 px-2 py-1 rounded-full">
                         <Star className="w-3 h-3 fill-current" />
@@ -122,9 +124,9 @@ export default function App() {
                       </div>
                     </div>
                     
-                    <h4 className="text-lg font-bold mb-1 group-hover:text-indigo-600 transition-colors">{service.title}</h4>
+                    <h4 className="text-lg font-bold mb-1 group-hover:text-indigo-600 transition-colors">{service.nome}</h4>
                     <div className="flex items-center gap-2 text-sm text-slate-500 mb-4">
-                      <span className="font-medium text-slate-700">{service.provider}</span>
+                      <span className="font-medium text-slate-700">{service.servico}</span>
                       <span>•</span>
                       <div className="flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
@@ -135,7 +137,7 @@ export default function App() {
                     <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
                       <div>
                         <span className="text-xs text-slate-400 block uppercase tracking-wider font-bold">A partir de</span>
-                        <span className="text-xl font-extrabold text-slate-900">R$ {service.price}</span>
+                        <span className="text-xl font-extrabold text-slate-900">R$ {service.valor_hora}</span>
                       </div>
                       <button className="bg-white border-2 border-indigo-600 text-indigo-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-600 hover:text-white transition-all">
                         Reservar

@@ -1,9 +1,9 @@
 export interface Service {
   id: number;
-  title: string;
-  provider: string;
-  category: string;
-  price: number;
+  nome: string;
+  servico: string;
+  avaliacao: string;
+  valor_hora: number;
 }
 
 export interface User {
