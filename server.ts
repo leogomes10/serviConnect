@@ -4,13 +4,32 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { Pool } from "pg";
 import dotenv from "dotenv";
+import { Request, Response } from 'express';
+
 
 dotenv.config();
 
 // Configuração do Pool do PostgreSQL
 // Em produção, utilize variáveis de ambiente
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  user: 'seu_usuario',
+  host: 'localhost',
+  database: 'serviconnect_db',
+  password: 'sua_senha',
+  port: 5432,
+});
+const app = express(); // É esta linha que falta para o erro ts(2304) sumir!
+app.use(express.json());
+
+// Exemplo de rota para buscar profissionais
+app.get('/profissionais', async (req: Request, res: Response) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM profissionais');
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao buscar profissionais' });
+  }
 });
 
 async function startServer() {
