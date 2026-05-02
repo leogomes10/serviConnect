@@ -2,12 +2,13 @@
 import express from "express";
 import cors from "cors";
 import { Pool } from "pg";
+import dotenv from 'dotenv';  
 
 const pool = new Pool({
   user: 'postgres',
   host: 'localhost',
   database: 'serviconnect_db',
-  password: 'Ok243300.', // A senha que alteramos no terminal
+  password: process.env.DB_PASSWORD, // A senha que alteramos no terminal
   port: 5432,
 });
 
@@ -16,6 +17,7 @@ const PORT = 5000;
 
 app.use(cors());
 app.use(express.json());
+dotenv.config();
 
 // Rota dos profissionais
 app.get("/profissionais", async (req, res) => {
