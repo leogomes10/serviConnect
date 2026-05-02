@@ -1,0 +1,25 @@
+3. Histórico de Implementações (Passo a Passo)
+Fase 1: Estrutura Base e Seleção de Perfil
+Criação do componente RoleSelection.tsx: Uma tela de boas-vindas que define se o usuário é um Cliente ou um Profissional.
+
+Implementação do estado userRole no App.tsx para gerenciar a navegação condicional.
+
+Fase 2: Interface do Cliente (Busca e Filtros)
+Criação do componente CustomerViews.tsx: Centraliza a lógica de exibição de profissionais.
+
+Implementação de filtros de busca em tempo real por nome e categoria de serviço.
+
+Desenvolvimento da lógica de ícones dinâmicos (getCategoryIcon) para categorias como Elétrica, Hidráulica e Pintura.
+
+Integração com o backend para listar prestadores reais salvos no banco de dados.
+
+Fase 3: Painel do Prestador (Gestão e Dashboard)
+Criação do componente ProviderView.tsx: O centro de controle do profissional.
+
+Modularização com StatCard.tsx: Desenvolvimento de um componente reutilizável para exibir estatísticas cruciais como:
+
+Ganhos no Mês (Foco financeiro).
+
+Avaliação Média (Reputação).
+
+Serviços do Dia (Gestão de tempo).

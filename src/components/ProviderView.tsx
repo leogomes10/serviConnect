@@ -1,11 +1,11 @@
-import React from "react";
+import React from "react"; //importa a biblioteca base do react para criar o componente
 
-interface ProviderViewProps {
-    onBack: () => void;
-}
+interface ProviderViewProps { //define o contrato de informacoes que este componente precisa receber
+    onBack: () => void; //diz que o obrigatoriamente recebe uma funcao para o botao "voltar"
+} //fecha a definicao da interface
 
-export function ProviderView ({ onBack }: ProviderViewProps){
-    return (
+export function ProviderView ({ onBack }: ProviderViewProps){ //exporta a funcao e usa a desestruturacao para pegar a funcao 'onBack'
+    return ( //inicia o que sera desenhadoi na tela do prestador
         <div className="min-h-screen bg-slate-50 font-sans">
             {/* Aqui vai o Header que vamos criar */}
             <main className="max-w-5xl mx-auto p-6">

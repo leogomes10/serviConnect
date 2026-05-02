@@ -1,0 +1,6 @@
+4. Melhores Práticas Adotadas
+Clean Code: Separação de responsabilidades (App cuida da lógica global; componentes cuidam do visual).
+
+Versionamento: Commits regulares via Cmder/Git para garantir o histórico de alterações.
+
+UI/UX: Uso da biblioteca lucide-react para ícones intuitivos e motion para transições suaves entre telas.

@@ -1,12 +1,16 @@
+/* Importa a fonte inter do google para um visual moderno */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+/* ativa as utilidades do tailwid CSS */
 @import "tailwindcss";
 
 @theme {
+  /* define a inter como fonte principal do sistema */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
   body {
+    /* aplica a fonte em todo o corpo do site automaticamente */
     @apply font-sans;
   }
 }
