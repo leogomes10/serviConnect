@@ -1,14 +1,16 @@
-// No seu server.ts, simplifique assim:
 import express from "express";
 import cors from "cors";
 import { Pool } from "pg";
 import dotenv from 'dotenv';  
 
+dotenv.config();
+
+
 const pool = new Pool({
   user: 'postgres',
   host: 'localhost',
   database: 'serviconnect_db',
-  password: process.env.DB_PASSWORD, // A senha que alteramos no terminal
+  password: process.env.DB_PASSWORD, 
   port: 5432,
 });
 
@@ -17,15 +19,15 @@ const PORT = 5000;
 
 app.use(cors());
 app.use(express.json());
-dotenv.config();
 
 // Rota dos profissionais
 app.get("/profissionais", async (req, res) => {
   try {
-    const { rows } = await pool.query("SELECT * FROM profissionais");
+    const { rows } = await pool.query("SELECT * FROM services");
     res.json(rows); // Isso DEVE retornar apenas texto/JSON
-  } catch (err) {
-    res.status(500).json({ error: "Erro no banco" });
+  } catch (err) { // 27. Captura o erro
+  console.error("ERRO DETALHADO NO BANCO:", err); // 28. ISSO vai aparecer no terminal 'node'
+  res.status(500).json({ error: "Erro interno no servidor" });
   }
 });
 

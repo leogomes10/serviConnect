@@ -28,10 +28,9 @@ export function CustomerView({ // exporta a funcao para ser usada em outros arqu
     }
   };
   
-  const filteredServices = services.filter(s => { //cria uma nova lista filtrada percorrendo cada servico (s) da lista original
-    const termo = searchTerm.toLowerCase(); //transforma o que o usuario digitou em letras minusculas para padronizar a busca.
-    return s.nome?.toLowerCase().includes(termo) || s.servico?.toLowerCase().includes(termo); //verifica se o termo digitado esta no nome ou servico do profissional.
-  });
+  const filteredServices = Array.isArray(services) 
+  ? services.filter((s: any) => s.title?.toLowerCase().includes(searchTerm.toLowerCase()))
+  : [];
 
   return ( //inicia o retorno  do que sera renderizado visualmente na tela
     <> {/*abre um fragment (uma tag vazia) para agrupar varios elementos sem criar uma div extra no HTML;}
@@ -82,16 +81,16 @@ export function CustomerView({ // exporta a funcao para ser usada em outros arqu
                 >
                   <div className="flex justify-between mb-4"> {/*alinha o icone a esquerda e a nota a direita;*/}
                     <div className="bg-slate-50 p-3 rounded-xl"> {/*moldura cinza claro para o icone da categoria*/}
-                      {getCategoryIcon(service.servico)} {/*chama a funcao que escolhe o icone baseado no servico*/}
+                      {getCategoryIcon(service.category)} {/*chama a funcao que escolhe o icone baseado no servico*/}
                     </div>
                     <div className="flex items-center gap-1 text-xs font-bold text-amber-500 bg-amber-50 px-2 py-1 rounded-full"> {/*badge de avaliacao*/}
                       <Star className="w-3 h-3 fill-current" /> 4.9 {/*icone de estrela e nota fixa (por enquanto)*/}
                     </div>
                   </div>
-                  <h4 className="text-lg font-bold mb-1">{service.nome}</h4> {/*mostra o nome do profissional*/}
-                  <p className="text-sm text-slate-500 mb-4">{service.servico}</p> {/*mostra o servico do profissional*/}
+                  <h4 className="text-lg font-bold mb-1">{service.title}</h4> {/*mostra o nome do profissional*/}
+                  <p className="text-sm text-slate-500 mb-4">{service.category}</p> {/*mostra o servico do profissional*/}
                   <div className="pt-4 border-t flex items-center justify-between">{/*linha divisoria e container para o rodape do card*/}
-                    <span className="text-xl font-extrabold text-slate-900">R$ {service.valor_hora}</span> {/*exibe o preco formatado*/}
+                    <span className="text-xl font-extrabold text-slate-900">R$ {service.price_estimate}</span> {/*exibe o preco formatado*/}
                     <button className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold"> {/*botao de reserva roxo*/}
                       Reservar {/*texto do botao*/}
                     </button>

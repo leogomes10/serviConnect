@@ -1,10 +1,10 @@
 /* define a estrutura de um profissional de manutencao */
 export interface Service {
   id: number;
-  nome: string;
-  servico: string;
-  avaliacao: string;
-  valor_hora: number;
+  provider_id: number;
+  title: string;          // Verifique se está com um 't' só aqui
+  category: string;       
+  price_estimate: number; 
 }
 
 /* define a estrutura do usuario que acessa o sitema */
