@@ -29,7 +29,7 @@ export function CustomerView({ // exporta a funcao para ser usada em outros arqu
   };
   
   const filteredServices = Array.isArray(services) 
-  ? services.filter((s: any) => s.title?.toLowerCase().includes(searchTerm.toLowerCase()))
+  ? services.filter((s: any) => s.provider_name?.toLowerCase().includes(searchTerm.toLowerCase()))
   : [];
 
   return ( //inicia o retorno  do que sera renderizado visualmente na tela
@@ -87,8 +87,8 @@ export function CustomerView({ // exporta a funcao para ser usada em outros arqu
                       <Star className="w-3 h-3 fill-current" /> 4.9 {/*icone de estrela e nota fixa (por enquanto)*/}
                     </div>
                   </div>
-                  <h4 className="text-lg font-bold mb-1">{service.title}</h4> {/*mostra o nome do profissional*/}
-                  <p className="text-sm text-slate-500 mb-4">{service.category}</p> {/*mostra o servico do profissional*/}
+                  <h4 className="text-lg font-bold mb-1">{service.provider_name}</h4> {/*mostra o nome do profissional*/}
+                  <p className="text-sm text-slate-500 mb-4">{service.category?.includes('El') ? 'Elétrica' : service.category}</p> {/*mostra o servico do profissional*/}
                   <div className="pt-4 border-t flex items-center justify-between">{/*linha divisoria e container para o rodape do card*/}
                     <span className="text-xl font-extrabold text-slate-900">R$ {service.price_estimate}</span> {/*exibe o preco formatado*/}
                     <button className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold"> {/*botao de reserva roxo*/}

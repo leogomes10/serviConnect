@@ -2,9 +2,9 @@
 export interface Service {
   id: number;
   provider_id: number;
-  title: string;          // Verifique se está com um 't' só aqui
   category: string;       
   price_estimate: number; 
+  provider_name: string;
 }
 
 /* define a estrutura do usuario que acessa o sitema */

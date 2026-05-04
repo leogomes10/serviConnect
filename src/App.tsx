@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Wrench, Zap, Droplets, Paintbrush, Search, MapPin, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Service } from './types';
-import { RoleSelection } from './components/RoleSelection';
+import RoleSelection from './components/RoleSelection';
 import { CustomerView } from './components/CustomerViews';
 
 export default function App() {
