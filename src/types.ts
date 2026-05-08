@@ -15,3 +15,11 @@ export interface User {
   /* o cargo SÓ pode ser um desses dois valores especificos */
   role: 'client' | 'provider';
 }
+
+export interface Profissional {
+  id: number;
+  nome: string;
+  especialidade: string;
+  preco: number;
+  email: string;
+}

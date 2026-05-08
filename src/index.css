@@ -49,3 +49,28 @@
   }
 }
 
+@layer components {
+  .servi-header {
+    @apply bg-white border-b border-slate-200 sticky top-0 z-10;
+  }
+
+  .servi-container {
+    @apply max-w-7xl mx-auto px-4;
+  }
+
+  .search-input {
+    @apply w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-lg;
+  }
+
+  .profissional-card {
+    @apply bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow;
+  }
+
+  .badge-avaliacao {
+    @apply flex items-center gap-1 text-xs font-bold text-amber-500 bg-amber-50 px-2 py-1 rounded-full;
+  }
+
+  .btn-reservar {
+    @apply bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors;
+  }
+}

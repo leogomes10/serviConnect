@@ -23,7 +23,7 @@ app.use(express.json());
 // Rota dos profissionais
 app.get("/profissionais", async (req, res) => {
   try {
-    const { rows } = await pool.query("SELECT * FROM services");
+    const { rows } = await pool.query("SELECT * FROM profissionais ORDER BY id DESC");
     res.json(rows); // Isso DEVE retornar apenas texto/JSON
   } catch (err) { // 27. Captura o erro
   console.error("ERRO DETALHADO NO BANCO:", err); // 28. ISSO vai aparecer no terminal 'node'

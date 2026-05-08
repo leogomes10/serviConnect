@@ -21,3 +21,13 @@ CREATE TABLE bookings ( -- Tabela de agendamentos (quando o cliente clica em 'Re
   status VARCHAR(50) DEFAULT 'pending', -- Começa como 'pendente' até o prestador aceitar.
   scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL -- O dia e hora que o serviço foi marcado em Assis.
 );
+
+CREATE TABLE profissionais (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    senha VARCHAR(255) NOT NULL,
+    especialidade VARCHAR(100),
+    preco DECIMAL(10, 2),
+    data_cadastro TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
