@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Star, Wrench, Zap, Droplets, Paintbrush } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Service } from '../types';
@@ -27,6 +27,14 @@ export function CustomerView({ // exporta a funcao para ser usada em outros arqu
       default: return <Wrench className="w-5 h-5 text-gray-500" />; //se nao for nenhum desses padrao, retorna uma chave de fenda cinza
     }
   };
+
+  const [listaProfissionais, setListaProfissionais] = useState([]);
+
+useEffect(() => {
+  fetch("http://localhost:5000/profissionais")
+    .then(res => res.json())
+    .then(dados => setListaProfissionais(dados));
+}, []);
   
   const filteredServices = Array.isArray(services) 
   ? services.filter((s: any) => s.provider_name?.toLowerCase().includes(searchTerm.toLowerCase()))

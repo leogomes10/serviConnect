@@ -1,24 +1,161 @@
-import React, { useState } from 'react'; // Importa o React e o hook useState para gerenciar as telas
-import { Search, Wrench, ArrowRight } from 'lucide-react'; // Importa os ícones para o visual do ServiConnect
+import React, { useState } from 'react'; //
+import { Search, Wrench, ArrowRight } from 'lucide-react'; //
 
 export default function RoleSelection({ onSelect }: { onSelect: (role: number) => void }) {
-  // Define qual tela aparece: 'selecao' (botões azuis) ou 'cadastro' (formulário)
-  const [tela, setTela] = useState('selecao');
-
-  // Objeto que guarda os dados digitados pelo profissional no cadastro
-  const [cadastro, setCadastro] = useState({
+  const [tela, setTela] = useState('selecao'); // Controle de navegação interna
+  const [cadastro, setCadastro] = useState({ // Objeto de cadastro conforme imagem image_2d26c0.jpg
     nome: '',
+    email: '',
+    senha: '',
+    confirmarSenha: '',
     categoria: '',
-    preco: ''
   });
 
-  // Função que lida com o envio do formulário
-  const salvarCadastro = (e: React.FormEvent) => {
-    e.preventDefault(); // Impede o navegador de recarregar a página ao enviar
-    console.log("Dados salvos:", cadastro); // Mostra no console os dados para conferência
-    alert("Cadastro realizado com sucesso!"); // Feedback visual rápido
-    setTela('area_profissional'); // Muda a tela para o painel de boas-vindas
-  };
+  const salvarCadastro = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  // Validação básica de senha que você já tem
+  if (cadastro.senha !== cadastro.confirmarSenha) {
+    alert("As senhas não coincidem!");
+    return;
+  }
+
+  try {
+    // Envia os dados para a rota que você acabou de criar no server.ts
+    const response = await fetch('http://localhost:5000/cadastro-profissional', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        nome: cadastro.nome,
+        email: cadastro.email,
+        senha: cadastro.senha,
+        categoria: cadastro.categoria
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      alert("Cadastro realizado com sucesso!");
+      setTela('login'); // Leva o usuário para a tela de login
+    } else {
+      alert("Erro: " + data.erro);
+    }
+  } catch (error) {
+    console.error("Erro ao conectar com o servidor:", error);
+    alert("O servidor está desligado ou houve um erro de conexão.");
+  }
+};
+
+  // --- TELA DE LOGIN DO PROFISSIONAL ---
+if (tela === 'login') {
+  return (
+    <div className="cadastro-container">
+      <div className="cadastro-card">
+        <h2 className="text-2xl font-bold mb-6 text-slate-900 text-center">Acesse sua conta</h2>
+        
+        <form className="space-y-4">
+          <div className="campo-grupo">
+            <label className="label-serviconnect">E-mail</label>
+            <input 
+              type="email" 
+              className="input-serviconnect" 
+              placeholder="seu@email.com"
+              required 
+            />
+          </div>
+
+          <div className="campo-grupo">
+            <label className="label-serviconnect">Senha</label>
+            <input 
+              type="password" 
+              className="input-serviconnect" 
+              placeholder="••••••••"
+              required 
+            />
+          </div>
+
+          <button type="submit" className="btn-finalizar cursor-pointer">
+            Entrar no ServiConnect
+          </button>
+        </form>
+
+        <div className="mt-6 text-center text-sm">
+          <span className="text-slate-500">Não tem uma conta? </span>
+          <button 
+            onClick={() => setTela('cadastro')} 
+            className="text-indigo-600 font-bold hover:underline cursor-pointer"
+          >
+            Criar conta
+          </button>
+        </div>
+
+        <button onClick={() => setTela('selecao')} className="w-full mt-4 text-slate-400 text-xs hover:underline cursor-pointer">
+          Voltar ao início
+        </button>
+      </div>
+    </div>
+  );
+}
+    
+  // --- TELA DE CADASTRO DO PROFISSIONAL ---
+if (tela === 'cadastro') {
+  return (
+    <div className="cadastro-container">
+      <div className="cadastro-card">
+        <h2 className="text-2xl font-bold mb-6 text-slate-900 text-center">Crie seu perfil profissional</h2>
+        
+        <form onSubmit={salvarCadastro} className="space-y-4">
+          <input 
+            type="text" 
+            placeholder="Nome completo" 
+            className="input-serviconnect" 
+            onChange={(e) => setCadastro({...cadastro, nome: e.target.value})} 
+          />
+          
+          <input 
+            type="email" 
+            placeholder="E-mail" 
+            className="input-serviconnect" 
+            onChange={(e) => setCadastro({...cadastro, email: e.target.value})} 
+          />
+
+          <div className="grid grid-cols-2 gap-2">
+            <input 
+              type="password" 
+              placeholder="Senha" 
+              className="input-serviconnect" 
+              onChange={(e) => setCadastro({...cadastro, senha: e.target.value})} 
+            />
+            <input 
+              type="password" 
+              placeholder="Confirmar" 
+              className="input-serviconnect" 
+              onChange={(e) => setCadastro({...cadastro, confirmarSenha: e.target.value})} 
+            />
+          </div>
+
+          <input 
+            type="text" 
+            placeholder="Especialidade" 
+            className="input-serviconnect" 
+            onChange={(e) => setCadastro({...cadastro, categoria: e.target.value})} 
+          />
+
+          <button type="submit" className="btn-finalizar">
+            Finalizar Cadastro <ArrowRight className="w-5 h-5" />
+          </button>
+        </form>
+
+        <button onClick={() => setTela('selecao')} className="w-full mt-4 text-slate-500 text-sm hover:underline">
+          Voltar
+        </button>
+      </div>
+    </div>
+  );
+}
 
   // --- TELA DE SELEÇÃO INICIAL (LAYOUT AZUL) ---
   if (tela === 'selecao') {
@@ -42,8 +179,8 @@ export default function RoleSelection({ onSelect }: { onSelect: (role: number) =
 
           {/* Card para Profissionais (Abre o formulário ao clicar) */}
           <button 
-            onClick={() => setTela('cadastro')} // Troca o estado para mostrar o formulário
-            className="bg-white p-10 rounded-3xl shadow-xl flex flex-col items-center text-center hover:scale-105 transition-transform"
+            onClick={() => setTela('login')} 
+            className="bg-white p-10 rounded-3xl shadow-xl flex flex-col items-center text-center cursor-pointer hover:scale-105 transition-transform"
           >
             <div className="bg-emerald-100 p-6 rounded-full mb-6">
               <Wrench className="w-12 h-12 text-emerald-600" />
@@ -57,65 +194,51 @@ export default function RoleSelection({ onSelect }: { onSelect: (role: number) =
   }
 
   // --- TELA DE FORMULÁRIO DE CADASTRO ---
-  if (tela === 'cadastro') {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-          <h2 className="text-2xl font-bold mb-6">Crie seu perfil profissional</h2>
+if (tela === 'cadastro') {
+  return (
+    <div className="cadastro-container">
+      <div className="cadastro-card">
+        <h2 className="text-2xl font-bold mb-6 text-slate-900 text-center">Crie seu perfil profissional</h2>
+        
+        <form onSubmit={salvarCadastro} className="space-y-4">
           
-          <form onSubmit={salvarCadastro} className="space-y-4">
-            {/* Campo para o Nome do Profissional */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Nome Completo</label>
-              <input 
-                type="text" 
-                className="w-full p-3 border border-slate-200 rounded-xl outline-indigo-600"
-                placeholder="Como seus clientes te verão?"
-                // Atualiza apenas o campo 'nome' no objeto de estado
-                onChange={(e) => setCadastro({...cadastro, nome: e.target.value})}
-                required
-              />
-            </div>
+          {/* Campo para o Nome do Profissional */}
+          <div className="campo-grupo">
+            <label className="label-serviconnect">Nome Completo</label>
+            <input 
+              type="text" 
+              className="input-serviconnect" 
+              placeholder="Como seus clientes te verão?"
+              onChange={(e) => setCadastro({...cadastro, nome: e.target.value})}
+              required 
+            />
+          </div>
 
-            {/* Campo para a Categoria do serviço */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Especialidade (Categoria)</label>
-              <input 
-                type="text" 
-                className="w-full p-3 border border-slate-200 rounded-xl outline-indigo-600"
-                placeholder="Ex: Elétrica, Pintura, Faxina"
-                // Atualiza apenas o campo 'categoria'
-                onChange={(e) => setCadastro({...cadastro, categoria: e.target.value})}
-                required
-              />
-            </div>
+          {/* Campo para a Categoria do serviço */}
+          <div className="campo-grupo">
+            <label className="label-serviconnect">Especialidade (Categoria)</label>
+            <input 
+              type="text" 
+              className="input-serviconnect" 
+              placeholder="Ex: Elétrica, Pintura, Faxina"
+              onChange={(e) => setCadastro({...cadastro, categoria: e.target.value})}
+              required 
+            />
+          </div>
 
-            {/* Campo para o Valor do serviço */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Preço Estimado (R$)</label>
-              <input 
-                type="number" 
-                className="w-full p-3 border border-slate-200 rounded-xl outline-indigo-600"
-                placeholder="Valor base por serviço"
-                // Atualiza apenas o campo 'preco'
-                onChange={(e) => setCadastro({...cadastro, preco: e.target.value})}
-                required
-              />
-            </div>
 
-            <button type="submit" className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700">
-              Finalizar Cadastro <ArrowRight className="w-5 h-5" />
-            </button>
-          </form>
-
-          {/* Botão de Cancelar/Voltar */}
-          <button onClick={() => setTela('selecao')} className="w-full mt-4 text-slate-500 text-sm hover:underline">
-            Voltar
+          <button type="submit" className="btn-finalizar">
+            Finalizar Cadastro <ArrowRight className="w-5 h-5" />
           </button>
-        </div>
+        </form>
+
+        <button onClick={() => setTela('selecao')} className="w-full mt-4 text-slate-500 text-sm hover:underline">
+          Voltar
+        </button>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   // --- TELA DE SUCESSO / ÁREA DO PROFISSIONAL ---
   return (
