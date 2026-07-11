@@ -74,3 +74,88 @@
     @apply bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors;
   }
 }
+
+@layer components {
+  /* Tela e Containers Principais */
+  .provider-screen {
+    @apply min-h-screen bg-slate-50 font-sans text-slate-900;
+  }
+
+  .provider-header {
+    @apply bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm;
+  }
+
+  .provider-header-container {
+    @apply max-w-5xl mx-auto px-6 h-16 flex items-center justify-between;
+  }
+
+  /* Bloco de Identificação/Brand no Topo */
+  .provider-brand {
+    @apply flex items-center gap-3;
+  }
+
+  .provider-icon-wrapper {
+    @apply bg-emerald-600 p-2 rounded-xl text-white;
+  }
+
+  .provider-title {
+    @apply text-lg font-bold leading-none;
+  }
+
+  .provider-subtitle {
+    @apply text-xs text-slate-500 mt-1;
+  }
+
+  /* Botão Sair */
+  .btn-logout {
+    @apply flex items-center gap-2 text-sm font-bold text-rose-600 hover:bg-rose-50 px-4 py-2 rounded-xl transition-all cursor-pointer;
+  }
+
+  /* Corpo da Página e Boas-vindas */
+  .provider-main-container {
+    @apply max-w-5xl mx-auto p-6 space-y-8;
+  }
+
+  .provider-welcome-box {
+    @apply space-y-1;
+  }
+
+  .provider-welcome-title {
+    @apply text-3xl font-black text-slate-900;
+  }
+
+  .provider-welcome-subtitle {
+    @apply text-slate-500 font-medium;
+  }
+
+  /* Grid dos StatCards */
+  .provider-stats-grid {
+    @apply grid grid-cols-1 md:grid-cols-3 gap-6;
+  }
+
+  /* Card da Agenda */
+  .provider-agenda-card {
+    @apply bg-white p-6 rounded-3xl border border-slate-200 shadow-sm;
+  }
+
+  .provider-agenda-title {
+    @apply text-xl font-bold mb-4 text-slate-900;
+  }
+
+  /* Estado Vazio da Agenda */
+  .provider-agenda-empty {
+    @apply border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center;
+  }
+
+  .provider-agenda-empty-icon {
+    @apply w-8 h-8 mx-auto mb-2 opacity-50 text-slate-400;
+  }
+
+  .provider-agenda-empty-text {
+    @apply font-medium text-sm text-slate-400;
+  }
+
+  .provider-agenda-empty-subtext {
+    @apply text-xs text-slate-400 mt-1;
+  }
+}

@@ -102,9 +102,10 @@ export function CustomerView({
                 <p className="text-sm text-slate-500 mb-4">{profissional.especialidade}</p>
                 
                 <div className="pt-4 border-t flex items-center justify-between">
-                  <span className="text-xl font-extrabold text-slate-900">
-                    R$ {profissional.preco || '0.00'}
-                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Valor</span>
+                    <span className="text-base font-bold text-indigo-600">A combinar</span>
+                  </div>
                   <button className="btn-reservar">
                     Reservar
                   </button>

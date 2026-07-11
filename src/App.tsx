@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Service } from './types';
 import RoleSelection from './components/RoleSelection';
 import { CustomerView } from './components/CustomerViews';
+import { ProviderView } from './components/ProviderView';
 
 export default function App() {
   // ESTADOS: Variaveis que o React monitora para atualizar a tela
@@ -11,6 +12,15 @@ export default function App() {
   const [loading, setLoading] = useState(true); // controla se a mensagem de "carregando" aparece
   const [searchTerm, setSearchTerm] = useState(''); // Guarda o texto da barra de busca
   const [userRole, setUserRole] = useState<number>(0); // 0=escolha, 1=cliente, 2=profissional
+  const [profissionalLogado, setProfissionalLogado] = useState<any>(null);
+
+  // No App.tsx, adicione ou ajuste a função de login
+const handleLoginSucesso = (dadosProfissional: any) => {
+  // 1 = Cliente, 2 = Profissional. Mudando para 2, o React mostra a ProviderView
+  setProfissionalLogado(dadosProfissional);
+  setUserRole(2); 
+  console.log("Bem-vindo,", dadosProfissional.nome);
+};
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -32,7 +42,9 @@ return (
   <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
     {/*se o papel do usuario for 0 (inicio), desenha o componente de selecao de perfil */}
     {userRole === 0 && (
-      <RoleSelection onSelect={setUserRole} /> //passa a funcao de mudar de cargo para dentro do botao
+      <RoleSelection onSelect={setUserRole} //passa a funcao de mudar de cargo para dentro do botao
+      onLoginSucesso={handleLoginSucesso} 
+      /> 
     )}
     
     {/*se o papel for 1 (cliente), desenha a tela de busca dos profissionais*/}
@@ -46,15 +58,19 @@ return (
       />
     )}
 
-    {/*se o papel for 2 (prestador), mostra o painel de gestao profissional*/}
-    {userRole === 2 && (
-      <div className="p-10 text-center">
-        <h2 className="text-2xl font-bold">Em breve: Painel do Profissional</h2>
-        <button onClick={() => setUserRole(0)} className="text-indigo-600 font-bold mt-4">Voltar</button>
-      </div>
-    )}
-  </div>
-);}
+    {/* se o papel for 2 (prestador), mostra o painel real que você já criou */}
+      {userRole === 2 && ( /*[cite: 1] */
+        <ProviderView 
+          profissional={profissionalLogado} 
+          onBack={() => {
+            setUserRole(0); //[cite: 1]
+            setProfissionalLogado(null); // Limpa o estado ao deslogar
+          }} 
+        />
+      )}
+    </div>
+  );
+}
 
  
 
