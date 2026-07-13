@@ -23,3 +23,22 @@ Ganhos no Mês (Foco financeiro).
 Avaliação Média (Reputação).
 
 Serviços do Dia (Gestão de tempo).
+
+---------------------10/07/2026------------------------------
+          CORRIGINDO ERROS DE SEGURANCA
+Corrigindo problema de Senha em texto puro, isso impede de alguem entrar no banco e ver todas as senhas...
+
+1. instale a biblioteca e os tipos dela para o TypeScript rodando o seguinte comando:
+npm install bcrypt && npm install --save-dev @types/bcrypt
+
+---------------------12/07/2026------------------------------
+2. No server.ts, importamos a biblioteca bcrypt para lidar com a segurança das senhas.
+
+3. Atualizamos a rota POST /cadastro-profissional:
+   - Passamos a interceptar a senha em texto limpo vinda do front-end.
+   - Usamos o comando 'await bcrypt.hash(senha, 10)' para gerar um hash criptografado.
+   - Salvamos apenas esse hash na tabela de profissionais do PostgreSQL, protegendo o dado original.
+
+4. Atualizamos a rota POST /login-profissional:
+   - Paramos de comparar a senha diretamente com operadores comuns (=== ou !==).
+   - Passamos a utilizar o 'await bcrypt.compare(senha, profissional.senha)' para decodificar e validar o hash gerado de forma segura.

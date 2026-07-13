@@ -5,6 +5,7 @@ import { Service } from './types';
 import RoleSelection from './components/RoleSelection';
 import { CustomerView } from './components/CustomerViews';
 import { ProviderView } from './components/ProviderView';
+import { AdminView } from './components/AdminView';
 
 export default function App() {
   // ESTADOS: Variaveis que o React monitora para atualizar a tela
@@ -68,6 +69,12 @@ return (
           }} 
         />
       )}
+      {/* se o papel for 3 (admin), mostra o painel de gerenciamento geral */}
+       {userRole === 3 && (
+         <AdminView 
+           onBack={() => setUserRole(0)} // Reseta o papel e volta para a tela inicial
+         />
+         )}
     </div>
   );
 }

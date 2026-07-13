@@ -1,55 +1,51 @@
-/* Importa a fonte inter do google para um visual moderno */
+/* Importa a fonte Inter do Google para um visual moderno */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-/* ativa as utilidades do tailwid CSS */
+/* Ativa as utilidades do Tailwind CSS v4 */
 @import "tailwindcss";
 
 @theme {
-  /* define a inter como fonte principal do sistema */
+  /* Define a Inter como fonte principal do sistema */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
   body {
-    /* aplica a fonte em todo o corpo do site automaticamente */
+    /* Aplica a fonte em todo o corpo do site automaticamente */
     @apply font-sans;
   }
 }
 
 @layer components {
-  /* O container principal que centraliza o card */
+  /* ==========================================================================
+     TELA DE CADASTRO / LOGIN
+     ========================================================================== */
   .cadastro-container {
     @apply min-h-screen bg-slate-50 flex items-center justify-center p-4;
   }
 
-  /* O card branco onde ficam os campos */
   .cadastro-card {
     @apply bg-white p-8 rounded-2xl shadow-lg w-full max-w-md;
   }
 
-  /* Estilo padrão para todos os campos de texto/senha */
-  .input-serviconnect {
-    @apply w-full p-3 border border-slate-200 rounded-xl outline-indigo-600 transition-all focus:border-indigo-400;
-  }
-
-  /* O botão de finalizar */
-  .btn-finalizar {
-    @apply w-full bg-indigo-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all active:scale-95;
-  }
-}
-
-@layer components {
-  /* Container que agrupa a label e o input */
   .campo-grupo {
     @apply mb-4 flex flex-col gap-1;
   }
 
-  /* Estilo das etiquetas (labels) */
   .label-serviconnect {
     @apply block text-sm font-medium text-slate-700 mb-1;
   }
-}
 
-@layer components {
+  .input-serviconnect {
+    @apply w-full p-3 border border-slate-200 rounded-xl outline-indigo-600 transition-all focus:border-indigo-400;
+  }
+
+  .btn-finalizar {
+    @apply w-full bg-indigo-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all active:scale-95;
+  }
+
+  /* ==========================================================================
+     TELA DO CLIENTE (CUSTOMER VIEW)
+     ========================================================================== */
   .servi-header {
     @apply bg-white border-b border-slate-200 sticky top-0 z-10;
   }
@@ -73,10 +69,10 @@
   .btn-reservar {
     @apply bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors;
   }
-}
 
-@layer components {
-  /* Tela e Containers Principais */
+  /* ==========================================================================
+     TELA DO PRESTADOR (PROVIDER VIEW)
+     ========================================================================== */
   .provider-screen {
     @apply min-h-screen bg-slate-50 font-sans text-slate-900;
   }
@@ -89,7 +85,6 @@
     @apply max-w-5xl mx-auto px-6 h-16 flex items-center justify-between;
   }
 
-  /* Bloco de Identificação/Brand no Topo */
   .provider-brand {
     @apply flex items-center gap-3;
   }
@@ -106,12 +101,10 @@
     @apply text-xs text-slate-500 mt-1;
   }
 
-  /* Botão Sair */
   .btn-logout {
     @apply flex items-center gap-2 text-sm font-bold text-rose-600 hover:bg-rose-50 px-4 py-2 rounded-xl transition-all cursor-pointer;
   }
 
-  /* Corpo da Página e Boas-vindas */
   .provider-main-container {
     @apply max-w-5xl mx-auto p-6 space-y-8;
   }
@@ -128,12 +121,10 @@
     @apply text-slate-500 font-medium;
   }
 
-  /* Grid dos StatCards */
   .provider-stats-grid {
     @apply grid grid-cols-1 md:grid-cols-3 gap-6;
   }
 
-  /* Card da Agenda */
   .provider-agenda-card {
     @apply bg-white p-6 rounded-3xl border border-slate-200 shadow-sm;
   }
@@ -142,7 +133,6 @@
     @apply text-xl font-bold mb-4 text-slate-900;
   }
 
-  /* Estado Vazio da Agenda */
   .provider-agenda-empty {
     @apply border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center;
   }
@@ -157,5 +147,24 @@
 
   .provider-agenda-empty-subtext {
     @apply text-xs text-slate-400 mt-1;
+  }
+
+  /* ==========================================================================
+     TELA DO ADMINISTRADOR & ATALHOS
+     ========================================================================== */
+  .admin-badge-status {
+    @apply text-xs font-bold px-3 py-1 rounded-full;
+  }
+
+  .admin-card-chamado {
+    @apply flex items-start justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-slate-200 transition-all;
+  }
+
+  .admin-icon-container {
+    @apply bg-white p-3 rounded-xl border border-slate-200 flex items-center justify-center;
+  }
+
+  .btn-atalho-admin {
+    @apply absolute bottom-4 right-4 bg-indigo-700/50 hover:bg-indigo-800 text-indigo-200 hover:text-white p-3 rounded-full transition-all flex items-center gap-2 text-xs font-semibold cursor-pointer shadow-sm border border-indigo-500/30;
   }
 }
