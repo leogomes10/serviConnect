@@ -24,7 +24,7 @@ export function CustomerView({
 
   // Busca os dados diretamente da sua tabela de profissionais
   useEffect(() => {
-    fetch("http://localhost:5000/profissionais")
+    fetch('http://192.168.1.12:5000/profissionais?busca=...')
       .then(res => res.json())
       .then(dados => {
         console.log("DADOS QUE CHEGARAM DO BANCO:", dados);
