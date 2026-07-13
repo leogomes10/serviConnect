@@ -42,3 +42,15 @@ npm install bcrypt && npm install --save-dev @types/bcrypt
 4. Atualizamos a rota POST /login-profissional:
    - Paramos de comparar a senha diretamente com operadores comuns (=== ou !==).
    - Passamos a utilizar o 'await bcrypt.compare(senha, profissional.senha)' para decodificar e validar o hash gerado de forma segura.
+
+5. Estruturação Inicial do Painel do Administrador (AdminView):
+   - Criado o componente funcional 'AdminView.tsx' na pasta de componentes para gerenciar o ecossistema do app.
+   - Adicionado um botão de atalho discreto e flutuante na tela de seleção inicial (RoleSelection.tsx) com a classe '.btn-atalho-admin'.
+   - Atualizado o 'App.tsx' com a condicional de renderização baseada no papel do usuário (userRole === 3) para exibir o painel de controle.
+   - Refatorado e centralizado os novos estilos utilitários do admin dentro do arquivo 'index.css' na camada de componentes do Tailwind.
+
+-------------------13/07/2026-------------------
+6. Renovação Visual da Tela de Seleção (UI/UX):
+   - Criado padrão de ícones em marca d'água no Canva e salvo na pasta 'public'.
+   - Criada a classe '.bg-selecao-pattern' no 'index.css' com fundo escuro e repetição responsiva.
+   - Atualizado o 'RoleSelection.tsx' para usar a nova classe, eliminando estilos inline.   

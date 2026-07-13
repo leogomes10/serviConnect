@@ -85,7 +85,6 @@ export default function RoleSelection({
         <div className="cadastro-card">
           <h2 className="text-2xl font-bold mb-6 text-slate-900 text-center">Acesse sua conta</h2>
           
-          {/* Conectamos o onSubmit com a função handleLogin */}
           <form className="space-y-4" onSubmit={handleLogin}>
             <div className="campo-grupo">
               <label className="label-serviconnect">E-mail</label>
@@ -134,7 +133,7 @@ export default function RoleSelection({
     );
   }
 
-  // --- TELA DE CADASTRO (Simplificada para o exemplo) ---
+  // --- TELA DE CADASTRO ---
   if (tela === 'cadastro') {
     return (
       <div className="cadastro-container">
@@ -159,48 +158,56 @@ export default function RoleSelection({
   }
 
   // --- TELA DE SELEÇÃO INICIAL ---
-if (tela === 'selecao') {
-  return (
-    <div className="min-h-screen bg-indigo-600 flex flex-col items-center justify-center p-4 relative">
-      <h1 className="text-4xl font-bold text-white mb-2">Bem-vindo ao ServiConnect</h1>
-      <p className="text-indigo-100 mb-12">Serviços verificados e pagamento seguro em Assis.</p>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
-        {/* OPÇÃO: CLIENTE */}
-        <div 
-          onClick={() => onSelect(1)} 
-          className="bg-white p-10 rounded-3xl shadow-xl flex flex-col items-center text-center cursor-pointer hover:scale-105 transition-all"
-        >
-          <div className="bg-indigo-100 p-6 rounded-full mb-6">
-            <Search className="w-12 h-12 text-indigo-600" />
-          </div>
-          <h2 className="text-2xl font-bold mb-2">Preciso de um serviço</h2>
-          <p className="text-slate-500">Encontre profissionais em poucos cliques.</p>
-        </div>
+  if (tela === 'selecao') {
+    return (
+      <div 
+        className="min-h-screen flex flex-col items-center justify-center p-4 relative"
+        style={{
+          backgroundColor: '#000c36',
+          backgroundImage: 'url("/bg-pattern.png")', // Puxa diretamente do diretório /public sem dar erro de módulo do Vite
+          backgroundRepeat: 'repeat',
+          backgroundSize: '260px'
+        }}
+      >
+        <h1 className="text-4xl font-bold text-white mb-2">Bem-vindo ao ServiConnect</h1>
+        <p className="text-indigo-100 mb-12">Serviços verificados e pagamento seguro em Assis.</p>
         
-        {/* OPÇÃO: PROFISSIONAL */}
-        <button 
-          onClick={() => setTela('login')} 
-          className="bg-white p-10 rounded-3xl shadow-xl flex flex-col items-center text-center cursor-pointer hover:scale-105 transition-transform"
-        >
-          <div className="bg-emerald-100 p-6 rounded-full mb-6">
-            <Wrench className="w-12 h-12 text-emerald-600" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+          {/* OPÇÃO: CLIENTE */}
+          <div 
+            onClick={() => onSelect(1)} 
+            className="bg-white p-10 rounded-3xl shadow-xl flex flex-col items-center text-center cursor-pointer hover:scale-105 transition-all"
+          >
+            <div className="bg-indigo-100 p-6 rounded-full mb-6">
+              <Search className="w-12 h-12 text-indigo-600" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Preciso de um serviço</h2>
+            <p className="text-slate-500">Encontre profissionais em poucos cliques.</p>
           </div>
-          <h2 className="text-2xl font-bold mb-2">Sou um profissional</h2>
-          <p className="text-slate-500">Gerencie sua agenda e aumente seus ganhos.</p>
+          
+          {/* OPÇÃO: PROFISSIONAL */}
+          <button 
+            onClick={() => setTela('login')} 
+            className="bg-white p-10 rounded-3xl shadow-xl flex flex-col items-center text-center cursor-pointer hover:scale-105 transition-transform"
+          >
+            <div className="bg-emerald-100 p-6 rounded-full mb-6">
+              <Wrench className="w-12 h-12 text-emerald-600" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Sou um profissional</h2>
+            <p className="text-slate-500">Gerencie sua agenda e aumente seus ganhos.</p>
+          </button>
+        </div>
+
+        {/* BOTÃO DE ATALHO PARA O ADMINISTRADOR */}
+        <button 
+          onClick={() => onSelect(3)} 
+          className="btn-atalho-admin"
+          title="Painel de Controle do Admin"
+        >
+          <span>Painel Admin</span>
         </button>
       </div>
-
-      {/* BOTÃO DE ATALHO PARA O ADMINISTRADOR */}
-      <button 
-        onClick={() => onSelect(3)} 
-        className="btn-atalho-admin"
-        title="Painel de Controle do Admin"
-      >
-        <span>Painel Admin</span>
-      </button>
-    </div>
-  );
-}
+    );
+  }
   return null;
 }
