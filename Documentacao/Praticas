@@ -1,4 +1,4 @@
-4. Melhores Práticas Adotadas
+ Melhores Práticas Adotadas
 Clean Code: Separação de responsabilidades (App cuida da lógica global; componentes cuidam do visual).
 
 Versionamento: Commits regulares via Cmder/Git para garantir o histórico de alterações.

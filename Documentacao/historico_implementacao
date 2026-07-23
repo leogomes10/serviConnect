@@ -53,4 +53,16 @@ npm install bcrypt && npm install --save-dev @types/bcrypt
 6. Renovação Visual da Tela de Seleção (UI/UX):
    - Criado padrão de ícones em marca d'água no Canva e salvo na pasta 'public'.
    - Criada a classe '.bg-selecao-pattern' no 'index.css' com fundo escuro e repetição responsiva.
-   - Atualizado o 'RoleSelection.tsx' para usar a nova classe, eliminando estilos inline.   
+   - Atualizado o 'RoleSelection.tsx' para usar a nova classe, eliminando estilos inline.
+
+7. Configuração de Teste Mobile e Ajustes de Integração com Banco:
+   - Configurado o Vite com a flag '--host' para habilitar o acesso ao app via rede local pelo celular.
+   - Atualizados os endpoints de fetch do frontend para apontar para o IP local (192.168.1.12), corrigindo erros de conexão e permitindo autenticação e busca direto em dispositivos móveis.
+   - Validada a criptografia de senhas (bcrypt) em novos cadastros e corrigidos os critérios de busca integrados ao banco PostgreSQL.
+   
+-------------------20/07/2026-------------------
+8. Resolução de Conexão Mobile, Autenticação e Segurança do Git:
+   - Identificado e corrigido o erro de autenticação/login causado por senhas sem hash no PostgreSQL e falha de apontamento no backend.
+   - Ajustados os endpoints de busca e login para utilizar o IP da máquina local (192.168.1.12), permitindo a sincronização e pesquisa de profissionais em tempo real via celular.
+   - Configurada a regra de segurança no arquivo '.gitignore' para a pasta 'Documentacao/comandosTerminal'.
+   - Executada a remoção do arquivo de anotações pessoais do rastreamento do Git ('git rm --cached'), excluindo-o do repositório remoto do GitHub e mantendo-o salvo apenas localmente.      
