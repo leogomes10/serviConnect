@@ -33,7 +33,7 @@ export function CustomerView({
 
   // Busca a lista de profissionais cadastrados
   useEffect(() => {
-    fetch('http://192.168.1.12:5000/profissionais')
+    fetch('http://192.168.1.5:5000/profissionais')
       .then(res => res.json())
       .then(dados => {
         console.log("DADOS QUE CHEGARAM DO BANCO:", dados);
@@ -63,19 +63,19 @@ export function CustomerView({
     }
   };
 
-  // Função para enviar o pedido do cliente ao backend
+  // Função para enviar o pedido do cliente ao backend (Corrigido para o IP .5)
   const handleCriarPedido = async (e: React.FormEvent) => {
     e.preventDefault();
     setEnviandoPedido(true);
 
     try {
-      const response = await fetch('http://192.168.1.12:5000/pedidos-servico', {
+      const response = await fetch('http://192.168.1.5:5000/pedidos-servico', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           cliente_nome: nomeCliente,
           cliente_telefone: telefoneCliente,
-          especialidade: especialidadeServico,
+          categoria: especialidadeServico,
           descricao: descricaoServico,
           cidade: 'Assis',
         }),

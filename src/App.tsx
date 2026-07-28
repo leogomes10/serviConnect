@@ -26,7 +26,7 @@ const handleLoginSucesso = (dadosProfissional: any) => {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await fetch('http://localhost:5000/profissionais'); // try "tente fazer isso", se a internet cair, ele pula para o cath
+        const response = await fetch('http://192.168.1.5:5000/profissionais'); // try "tente fazer isso", se a internet cair, ele pula para o cath
         const data = await response.json(); // transforma esse texto em um objeto javascript
         setServices(data); //atualiza a memoria do app com dados reais
       } catch (error) { // se algo der errado no "try", ele cai aqui

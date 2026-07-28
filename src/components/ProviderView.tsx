@@ -5,14 +5,13 @@ interface Pedido {
   especialidade: string;
   descricao: string;
   cidade: string;
-  custo_moedas: number;
-  limite_respostas: number;
-  data_criacao: string;
+  custo_moedas?: number;
+  limite_respostas?: number;
+  data_criacao?: string;
   cliente_nome?: string;
   cliente_telefone?: string;
 }
 
-// Interface ajustada exatamente com o que o App.tsx envia
 interface ProviderViewProps {
   profissional: {
     id: number;
@@ -27,10 +26,8 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
   const [loading, setLoading] = useState(true);
   const [mensagemErro, setMensagemErro] = useState('');
   
-  // Estado local para atualizar as moedas na tela imediatamente após comprar um lead
   const [saldoMoedas, setSaldoMoedas] = useState<number>(profissional?.saldo_moedas ?? 50);
 
-  // Trava de segurança contra o erro de tela branca!
   if (!profissional) {
     return (
       <div style={{ padding: '20px', textAlign: 'center' }}>
@@ -42,13 +39,12 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
     );
   }
 
-  // Busca os pedidos no backend
+  // Busca os pedidos no backend (Corrigido IP .5)
   useEffect(() => {
     const carregarPedidos = async () => {
       try {
         setLoading(true);
-        // Apontando para o IP da sua rede local (importante pro teste no celular)
-        const res = await fetch('http://192.168.1.12:5000/pedidos-servico');
+        const res = await fetch('http://192.168.1.5:5000/pedidos-servico');
         if (res.ok) {
           const data = await res.json();
           setPedidos(data);
@@ -63,8 +59,8 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
     carregarPedidos();
   }, []);
 
-  // Função de comprar o lead e atualizar saldo
-  const handleComprarLead = async (idPedido: number, custoMoedas: number) => {
+  // Função de comprar lead (Corrigido IP .5 e chave profissional_id)
+  const handleComprarLead = async (idPedido: number, custoMoedas: number = 15) => {
     setMensagemErro('');
 
     if (saldoMoedas < custoMoedas) {
@@ -73,30 +69,29 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
     }
 
     try {
-      const res = await fetch('http://192.168.1.12:5000/comprar-lead', {
+      const res = await fetch('http://192.168.1.5:5000/comprar-lead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id_profissional: profissional.id,
-          id_pedido: idPedido,
+          profissional_id: profissional.id,
+          pedido_id: idPedido,
+          custo_moedas: custoMoedas
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setMensagemErro(data.error || 'Erro ao desbloquear contato');
+        setMensagemErro(data.erro || 'Erro ao desbloquear contato');
         return;
       }
 
-      // Atualiza o saldo local na tela
       setSaldoMoedas(data.novo_saldo);
 
-      // Atualiza o card com o WhatsApp liberado
       setPedidos((prevPedidos) =>
         prevPedidos.map((p) =>
           p.id === idPedido
-            ? { ...p, cliente_nome: data.cliente_nome, cliente_telefone: data.cliente_telefone }
+            ? { ...p, cliente_nome: data.contato_cliente.cliente_nome, cliente_telefone: data.contato_cliente.cliente_telefone }
             : p
         )
       );
@@ -110,7 +105,6 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
 
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      {/* Botão de Voltar para a Home */}
       <button 
         onClick={onBack}
         style={{ 
@@ -125,7 +119,6 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
         ← Sair / Voltar
       </button>
 
-      {/* Banner de Carteira */}
       <div
         style={{
           background: '#2563eb',
@@ -224,7 +217,7 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
               </div>
             ) : (
               <button
-                onClick={() => handleComprarLead(pedido.id, pedido.custo_moedas)}
+                onClick={() => handleComprarLead(pedido.id, pedido.custo_moedas || 15)}
                 style={{
                   width: '100%',
                   background: '#2563eb',
@@ -237,7 +230,7 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
                   marginTop: '8px',
                 }}
               >
-                🔓 Desbloquear Contato por {pedido.custo_moedas} moedas
+                🔓 Desbloquear Contato por {pedido.custo_moedas || 15} moedas
               </button>
             )}
           </div>

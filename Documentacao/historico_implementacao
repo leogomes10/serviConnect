@@ -65,4 +65,48 @@ npm install bcrypt && npm install --save-dev @types/bcrypt
    - Identificado e corrigido o erro de autenticação/login causado por senhas sem hash no PostgreSQL e falha de apontamento no backend.
    - Ajustados os endpoints de busca e login para utilizar o IP da máquina local (192.168.1.12), permitindo a sincronização e pesquisa de profissionais em tempo real via celular.
    - Configurada a regra de segurança no arquivo '.gitignore' para a pasta 'Documentacao/comandosTerminal'.
-   - Executada a remoção do arquivo de anotações pessoais do rastreamento do Git ('git rm --cached'), excluindo-o do repositório remoto do GitHub e mantendo-o salvo apenas localmente.      
+   - Executada a remoção do arquivo de anotações pessoais do rastreamento do Git ('git rm --cached'), excluindo-o do repositório remoto do GitHub e mantendo-o salvo apenas localmente. 
+
+-------------------22/07/2026-------------------
+9. Pivotagem de Modelo de Negócio (Estilo GetNinjas - Venda de Leads):
+   - Definida a estratégia de monetização baseada em compra de contatos/leads via moeda virtual para evitar a "fuga de plataforma" e eliminar custos de gateways com retenção (escrow).
+   - Ajustada a modelagem do banco de dados PostgreSQL:
+     * Adicionada a coluna 'saldo_moedas' na tabela 'profissionais' (iniciando com bônus de 50 moedas de boas-vindas).
+     * Criada a tabela 'pedidos_servico' para armazenar solicitações enviadas pelos clientes (com limite de 3 respostas por pedido).
+     * Criada a tabela 'leads_comprados' para controle de histórico de compra de contatos por profissional.
+
+10. Atualização do Backend (server.ts) e Segurança de Dependências:
+    - Adicionadas as novas rotas de API:
+      * 'POST /pedidos-servico': Permite ao cliente publicar uma necessidade na plataforma.
+      * 'GET /pedidos-servico': Exibe o mural de oportunidades abertas para os prestadores.
+      * 'POST /comprar-lead': Realiza a transação com trava de segurança (verifica saldo de moedas, debita a taxa, trava o limite de 3 prestadores e desbloqueia o WhatsApp do cliente).
+    - Substituído o pacote 'bcrypt' nativo por 'bcryptjs' para garantir compatibilidade cross-platform e evitar travamentos no ambiente Windows/Node.js.
+    - Configurado o servidor no IP local (0.0.0.0:5000) garantindo a comunicação fluida com o app mobile.
+
+11. Atualização da Interface e Fluxo de Telas (UI/UX):
+    - Refatorado o 'ProviderView.tsx' (Mural do Prestador):
+      * Exibição do saldo de moedas em tempo real no topo da tela.
+      * Cards de oportunidades dinâmicos com botão "Desbloquear Contato".
+      * Revelação instantânea do WhatsApp do cliente com direcionamento direto para conversa no app após a compra do lead.
+    - Refatorado o 'CustomerViews.tsx' (Visão do Cliente):
+      * Adicionado banner de destaque e botão para "Solicitar Orçamento".
+      * Criado o modal interativo 'ModalNovoPedido' para o cliente cadastrar demandas rapidamente, alimentando o mural do prestador ao vivo.        
+
+-------------------28/07/2026-------------------
+12. Refatoração Arquitetural e Modularização do Backend (Express + TypeScript):
+    - Dividida a estrutura monolítica do 'server.ts' em módulos independentes e organizados utilizando 'express.Router()':
+      * Criada a pasta 'src/config/db.ts' para centralizar a conexão e o gerenciamento de Pool do PostgreSQL com tratamento seguro de tipos e fallback para '.env'.
+      * Criado 'src/routes/auth.routes.ts' isolando o fluxo de cadastro, login com 'bcryptjs' e a rota 'GET /profissionais' para listagem no mural inicial.
+      * Criado 'src/routes/pedidos.routes.ts' agrupando a publicação de ordens de serviço, mural de oportunidades e o desconto de saldo para compra de leads.
+      * Criado 'src/routes/moedas.routes.ts' para centralizar a inteligência de cobrança de pacotes de moedas.
+      * novo e simplificado o 'src/server.ts' para atuar puramente como ponto de entrada limpo e inicialização de middlewares globais (CORS e express.json).
+
+13. Estruturação do Sistema de Recarga de Moedas e Ajustes de Banco:
+    - Criada a nova tabela 'transacoes_moedas' no PostgreSQL para registro de intenções e histórico financeiro de recargas (status PENDENTE/APROVADO).
+    - Criadas as rotas no backend para comercialização de créditos:
+      * 'POST /gerar-pix-moedas': Gera a string Pix Copia e Cola formatada nos padrões do Banco Central para o valor do pacote selecionado.
+      * 'POST /confirmar-recarga': Atualiza a transação para APROVADO e soma atomicamente as novas moedas ao 'saldo_moedas' do prestador.
+
+14. Correção de Rotas e Resolução de Erros de Parse no Frontend:
+    - Identificado e corrigido o erro 404/JSON SyntaxError no navegador ao buscar prestadores na tela do cliente.
+    - Mapeada a rota 'GET /profissionais' no módulo de autenticação e reajustado o caminho relativo dos módulos dentro da pasta 'src/', restaurando a renderização dinâmica de cards no 'CustomerViews.tsx'.

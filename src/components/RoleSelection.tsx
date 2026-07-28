@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Wrench, ArrowRight } from 'lucide-react';
 
-// Adicionamos 'onLoginSucesso' nas propriedades para avisar o App.tsx quando logar
 export default function RoleSelection({ 
   onSelect, 
   onLoginSucesso 
@@ -20,15 +19,15 @@ export default function RoleSelection({
     email: '',
     senha: '',
     confirmarSenha: '',
-    categoria: '',
+    especialidade: '',
   });
 
-  // 2. FUNÇÃO QUE CHAMA A ROTA DE LOGIN NO SERVER.TS
+  // 2. FUNÇÃO QUE CHAMA A ROTA DE LOGIN NO SERVER.TS (Corrigido para IP .5)
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      const response = await fetch('http://192.168.1.12:5000/login-profissional', {
+      const response = await fetch('http://192.168.1.5:5000/login-profissional', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: loginEmail, senha: loginSenha }),
@@ -37,16 +36,16 @@ export default function RoleSelection({
       const data = await response.json();
 
       if (response.ok) {
-        // Se o login no banco deu certo, avisamos o App.tsx
-        onLoginSucesso(data);
+        onLoginSucesso(data.profissional || data);
       } else {
-        alert(data.error || "Erro ao fazer login");
+        alert(data.erro || data.error || "Erro ao fazer login");
       }
     } catch (error) {
       alert("Servidor desligado ou erro de conexão.");
     }
   };
 
+  // 3. FUNÇÃO DE CADASTRO (Corrigido rota /cadastrar-profissional e IP .5)
   const salvarCadastro = async (e: React.FormEvent) => {
     e.preventDefault();
     if (cadastro.senha !== cadastro.confirmarSenha) {
@@ -55,14 +54,14 @@ export default function RoleSelection({
     }
 
     try {
-      const response = await fetch('http://192.168.1.12:5000/cadastro-profissional', {
+      const response = await fetch('http://192.168.1.5:5000/cadastrar-profissional', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nome: cadastro.nome,
           email: cadastro.email,
           senha: cadastro.senha,
-          categoria: cadastro.categoria
+          especialidade: cadastro.especialidade
         }),
       });
 
@@ -71,7 +70,7 @@ export default function RoleSelection({
         alert("Cadastro realizado com sucesso! Agora faça login.");
         setTela('login');
       } else {
-        alert("Erro: " + data.erro);
+        alert("Erro: " + (data.erro || data.error));
       }
     } catch (error) {
       alert("Erro ao conectar com o servidor.");
@@ -146,7 +145,7 @@ export default function RoleSelection({
               <input type="password" placeholder="Senha" className="input-serviconnect" required onChange={(e) => setCadastro({...cadastro, senha: e.target.value})} />
               <input type="password" placeholder="Confirmar" className="input-serviconnect" required onChange={(e) => setCadastro({...cadastro, confirmarSenha: e.target.value})} />
             </div>
-            <input type="text" placeholder="Especialidade" className="input-serviconnect" required onChange={(e) => setCadastro({...cadastro, categoria: e.target.value})} />
+            <input type="text" placeholder="Especialidade (Ex: Pintor, Eletricista)" className="input-serviconnect" required onChange={(e) => setCadastro({...cadastro, especialidade: e.target.value})} />
             <button type="submit" className="btn-finalizar">
               Finalizar Cadastro <ArrowRight className="w-5 h-5" />
             </button>
@@ -164,7 +163,7 @@ export default function RoleSelection({
         className="min-h-screen flex flex-col items-center justify-center p-4 relative"
         style={{
           backgroundColor: '#000c36',
-          backgroundImage: 'url("/bg-pattern.png")', // Puxa diretamente do diretório /public sem dar erro de módulo do Vite
+          backgroundImage: 'url("/bg-pattern.png")',
           backgroundRepeat: 'repeat',
           backgroundSize: '260px'
         }}
