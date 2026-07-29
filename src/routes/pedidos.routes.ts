@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { pool } from '../config/db';
+import { autenticarToken, RequestAutenticado } from '../config/auth.middleware';
 
 const router = Router();
 
@@ -52,9 +53,15 @@ router.get('/pedidos-servico', async (req, res) => {
   }
 });
 
-// Rota: Comprar Lead (Desconta moedas e revela contato)
-router.post('/comprar-lead', async (req, res) => {
-  const { profissional_id, pedido_id, custo_moedas } = req.body;
+// Rota Protegida: Comprar Lead (Desconta moedas e revela contato)
+router.post('/comprar-lead', autenticarToken, async (req: RequestAutenticado, res) => {
+  const { pedido_id, custo_moedas } = req.body;
+  // 🔒 ID seguro vindo diretamente do Token JWT autenticado
+  const profissional_id = req.usuario?.id;
+
+  if (!profissional_id) {
+    return res.status(401).json({ erro: 'Profissional não autenticado.' });
+  }
 
   try {
     const profResult = await pool.query('SELECT saldo_moedas FROM profissionais WHERE id = $1', [profissional_id]);
@@ -67,8 +74,10 @@ router.post('/comprar-lead', async (req, res) => {
       return res.status(400).json({ erro: 'Saldo de moedas insuficiente para comprar este lead.' });
     }
 
+    // Debita as moedas
     await pool.query('UPDATE profissionais SET saldo_moedas = saldo_moedas - $1 WHERE id = $2', [custo_moedas || 15, profissional_id]);
     
+    // Registra a compra
     await pool.query(
       'INSERT INTO leads_comprados (profissional_id, pedido_id, moedas_gastas) VALUES ($1, $2, $3)',
       [profissional_id, pedido_id, custo_moedas || 15]

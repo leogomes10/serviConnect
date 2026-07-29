@@ -1,8 +1,11 @@
 import { Router } from 'express'; // Importa a função Router do Express para criar módulos de rotas
 import bcrypt from 'bcryptjs'; // Importa a biblioteca de criptografia de senhas
+import jwt from 'jsonwebtoken'
 import { pool } from '../config/db'; // Importa o pool de conexões com o PostgreSQL
 
+
 const router = Router(); // Cria uma nova instância de roteador do Express
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key';
 
 // Rota: Cadastro de Profissional
 router.post('/cadastrar-profissional', async (req, res) => { // Define a rota HTTP POST de cadastro
@@ -55,8 +58,16 @@ router.post('/login-profissional', async (req, res) => { // Define a rota HTTP P
 
     delete profissional.senha; // Remove o hash da senha do objeto antes de enviar para o frontend por segurança
 
+    // 🔑 1. Gerar o token JWT com a chave secreta
+    const token = jwt.sign(
+      { id: profissional.id, email: profissional.email, nome: profissional.nome },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
     res.json({ // Retorna resposta de sucesso com status 200 HTTP
       mensagem: 'Login realizado com sucesso!', // Notificação de login
+      token,
       profissional // Envia os dados e o saldo de moedas do profissional
     }); // Fecha a resposta JSON
 

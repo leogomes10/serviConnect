@@ -110,3 +110,12 @@ npm install bcrypt && npm install --save-dev @types/bcrypt
 14. Correção de Rotas e Resolução de Erros de Parse no Frontend:
     - Identificado e corrigido o erro 404/JSON SyntaxError no navegador ao buscar prestadores na tela do cliente.
     - Mapeada a rota 'GET /profissionais' no módulo de autenticação e reajustado o caminho relativo dos módulos dentro da pasta 'src/', restaurando a renderização dinâmica de cards no 'CustomerViews.tsx'.
+
+15. Resolução de Conexões, Ajustes no Banco e Modal de Recarga PIX:
+    - Atualizados todos os endpoints de fetch do frontend (`CustomerViews.tsx`, `RoleSelection.tsx`, `ProviderView.tsx`) para o novo IP local da rede (`192.168.1.5:5000`), eliminando erros de conexão.
+    - Corrigida a divergência de nome de colunas no backend PostgreSQL (ajustada a requisição de inserção e consulta para utilizar a coluna 'especialidade' na tabela 'pedidos_servico').
+    - Corrigidos erros de typings do TypeScript e ajuste de propriedade CSS de layout (`justifyContext` para `justifyContent`) no `ProviderView.tsx`.
+    - Finalizada a interface do Modal de Recarga no `ProviderView.tsx`:
+      * Adicionado o botão "+ Recarregar Moedas" no painel da carteira.
+      * Criado fluxo interativo para escolha de pacotes (Iniciante 30, Profissional 70 e Mestre 150 moedas).
+      * Implementada a exibição do código PIX Copia e Cola e o botão para simulação e confirmação imediata da recarga no saldo do prestador.    

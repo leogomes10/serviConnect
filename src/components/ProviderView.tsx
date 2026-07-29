@@ -67,7 +67,7 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
     carregarPedidos();
   }, []);
 
-  // Função de comprar lead
+  // Função de comprar lead (Atualizada com Token JWT)
   const handleComprarLead = async (idPedido: number, custoMoedas: number = 15) => {
     setMensagemErro('');
 
@@ -77,11 +77,15 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
     }
 
     try {
+      const token = localStorage.getItem('@ServiConnect:token');
+
       const res = await fetch('http://192.168.1.5:5000/comprar-lead', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // 🔑 Token JWT enviado
+        },
         body: JSON.stringify({
-          profissional_id: profissional.id,
           pedido_id: idPedido,
           custo_moedas: custoMoedas
         }),
@@ -117,11 +121,15 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
     setPacoteSelecionado({ moedas, valor });
 
     try {
+      const token = localStorage.getItem('@ServiConnect:token');
+
       const res = await fetch('http://192.168.1.5:5000/gerar-pix-moedas', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // 🔑 Token JWT enviado
+        },
         body: JSON.stringify({
-          profissional_id: profissional.id,
           quantidade_moedas: moedas,
           valor_reais: valor
         }),
@@ -148,9 +156,14 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
     if (!transacaoId) return;
 
     try {
+      const token = localStorage.getItem('@ServiConnect:token');
+
       const res = await fetch('http://192.168.1.5:5000/confirmar-recarga', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // 🔑 Token JWT enviado
+        },
         body: JSON.stringify({
           transacao_id: transacaoId,
           profissional_id: profissional.id

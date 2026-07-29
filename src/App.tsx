@@ -15,13 +15,23 @@ export default function App() {
   const [userRole, setUserRole] = useState<number>(0); // 0=escolha, 1=cliente, 2=profissional
   const [profissionalLogado, setProfissionalLogado] = useState<any>(null);
 
-  // No App.tsx, adicione ou ajuste a função de login
-const handleLoginSucesso = (dadosProfissional: any) => {
-  // 1 = Cliente, 2 = Profissional. Mudando para 2, o React mostra a ProviderView
-  setProfissionalLogado(dadosProfissional);
-  setUserRole(2); 
-  console.log("Bem-vindo,", dadosProfissional.nome);
-};
+  // Função executada quando o profissional faz login com sucesso
+  const handleLoginSucesso = (respostaLogin: any) => {
+    // 1. Salva o token JWT no localStorage se ele tiver vindo do backend
+    if (respostaLogin.token) {
+      localStorage.setItem('@ServiConnect:token', respostaLogin.token);
+    }
+
+    // 2. Define o profissional logado (pega o objeto do profissional ou a resposta completa)
+    const dadosProfissional = respostaLogin.profissional || respostaLogin;
+    setProfissionalLogado(dadosProfissional);
+
+    // 3. Muda a tela para o Painel do Prestador (userRole = 2)
+    setUserRole(2);
+
+    console.log("Bem-vindo,", dadosProfissional.nome);
+  };
+
 
   useEffect(() => {
     const fetchServices = async () => {
