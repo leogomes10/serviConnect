@@ -25,7 +25,15 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(true);
   const [mensagemErro, setMensagemErro] = useState('');
-  
+
+  // --- ESTADOS PARA O MODAL DE RECARGA ---
+  const [modalRecargaAberto, setModalRecargaAberto] = useState(false);
+  const [passoRecarga, setPassoRecarga] = useState<'selecao' | 'pix'>('selecao');
+  const [pacoteSelecionado, setPacoteSelecionado] = useState<{ moedas: number; valor: number } | null>(null);
+  const [chavePix, setChavePix] = useState('');
+  const [carregandoPix, setCarregandoPix] = useState(false);
+  const [transacaoId, setTransacaoId] = useState<number | null>(null);
+
   const [saldoMoedas, setSaldoMoedas] = useState<number>(profissional?.saldo_moedas ?? 50);
 
   if (!profissional) {
@@ -39,7 +47,7 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
     );
   }
 
-  // Busca os pedidos no backend (Corrigido IP .5)
+  // Busca os pedidos no backend
   useEffect(() => {
     const carregarPedidos = async () => {
       try {
@@ -59,7 +67,7 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
     carregarPedidos();
   }, []);
 
-  // Função de comprar lead (Corrigido IP .5 e chave profissional_id)
+  // Função de comprar lead
   const handleComprarLead = async (idPedido: number, custoMoedas: number = 15) => {
     setMensagemErro('');
 
@@ -103,6 +111,75 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
     }
   };
 
+  // --- FUNÇÕES DA RECARGA VIA PIX ---
+  const handleGerarPix = async (moedas: number, valor: number) => {
+    setCarregandoPix(true);
+    setPacoteSelecionado({ moedas, valor });
+
+    try {
+      const res = await fetch('http://192.168.1.5:5000/gerar-pix-moedas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profissional_id: profissional.id,
+          quantidade_moedas: moedas,
+          valor_reais: valor
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setChavePix(data.codigo_pix);
+        setTransacaoId(data.transacao_id);
+        setPassoRecarga('pix');
+      } else {
+        alert(data.erro || 'Erro ao gerar cobrança PIX');
+      }
+    } catch (err) {
+      console.error('Erro ao gerar PIX:', err);
+      alert('Erro de conexão ao gerar o PIX.');
+    } finally {
+      setCarregandoPix(false);
+    }
+  };
+
+  const handleConfirmarPagamento = async () => {
+    if (!transacaoId) return;
+
+    try {
+      const res = await fetch('http://192.168.1.5:5000/confirmar-recarga', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transacao_id: transacaoId,
+          profissional_id: profissional.id
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert(`🎉 Pagamento confirmado! ${pacoteSelecionado?.moedas} moedas adicionadas à sua conta.`);
+        setSaldoMoedas(data.novo_saldo);
+        fecharModalRecarga();
+      } else {
+        alert(data.erro || 'Erro ao confirmar pagamento.');
+      }
+    } catch (err) {
+      console.error('Erro ao confirmar pagamento:', err);
+      alert('Erro de conexão ao confirmar pagamento.');
+    }
+  };
+
+  const fecharModalRecarga = () => {
+    setModalRecargaAberto(false);
+    setPassoRecarga('selecao');
+    setPacoteSelecionado(null);
+    setChavePix('');
+    setTransacaoId(null);
+  };
+
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <button 
@@ -119,6 +196,7 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
         ← Sair / Voltar
       </button>
 
+      {/* Banner de Carteira */}
       <div
         style={{
           background: '#2563eb',
@@ -137,7 +215,22 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
         </div>
         <div style={{ textAlign: 'right' }}>
           <span style={{ fontSize: '12px', opacity: 0.8 }}>Sua Carteira</span>
-          <h2 style={{ margin: 0, color: '#facc15' }}>🪙 {saldoMoedas} moedas</h2>
+          <h2 style={{ margin: '0 0 6px 0', color: '#facc15' }}>🪙 {saldoMoedas} moedas</h2>
+          <button
+            onClick={() => setModalRecargaAberto(true)}
+            style={{
+              background: '#facc15',
+              color: '#1e3a8a',
+              border: 'none',
+              padding: '4px 10px',
+              borderRadius: '6px',
+              fontWeight: 'bold',
+              fontSize: '12px',
+              cursor: 'pointer'
+            }}
+          >
+            + Recarregar Moedas
+          </button>
         </div>
       </div>
 
@@ -235,6 +328,209 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
             )}
           </div>
         ))
+      )}
+
+      {/* MODAL DE RECARGA DE MOEDAS */}
+      {modalRecargaAberto && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(15, 23, 42, 0.65)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: '16px',
+            padding: '24px',
+            maxWidth: '450px',
+            width: '100%',
+            position: 'relative',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+          }}>
+            <button
+              onClick={fecharModalRecarga}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'none',
+                border: 'none',
+                fontSize: '18px',
+                cursor: 'pointer',
+                color: '#64748b'
+              }}
+            >
+              ✕
+            </button>
+
+            {passoRecarga === 'selecao' ? (
+              <>
+                <h3 style={{ margin: '0 0 6px 0', color: '#0f172a' }}>Comprar Moedas</h3>
+                <p style={{ margin: '0 0 20px 0', color: '#64748b', fontSize: '14px' }}>
+                  Escolha um pacote para liberar contatos de clientes no mural.
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {/* Pacote 1 */}
+                  <div
+                    onClick={() => handleGerarPix(30, 15)}
+                    style={{
+                      border: '2px solid #e2e8f0',
+                      borderRadius: '12px',
+                      padding: '14px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      transition: '0.2s',
+                      opacity: carregandoPix ? 0.6 : 1
+                    }}
+                  >
+                    <div>
+                      <h4 style={{ margin: 0, color: '#1e293b' }}>🪙 30 Moedas</h4>
+                      <span style={{ fontSize: '12px', color: '#64748b' }}>Pacote Iniciante</span>
+                    </div>
+                    <span style={{ fontWeight: 'bold', color: '#2563eb', fontSize: '16px' }}>R$ 15,00</span>
+                  </div>
+
+                  {/* Pacote 2 */}
+                  <div
+                    onClick={() => handleGerarPix(70, 30)}
+                    style={{
+                      border: '2px solid #2563eb',
+                      background: '#eff6ff',
+                      borderRadius: '12px',
+                      padding: '14px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      position: 'relative',
+                      opacity: carregandoPix ? 0.6 : 1
+                    }}
+                  >
+                    <span style={{
+                      position: 'absolute',
+                      top: '-10px',
+                      right: '12px',
+                      background: '#2563eb',
+                      color: '#fff',
+                      fontSize: '10px',
+                      fontWeight: 'bold',
+                      padding: '2px 8px',
+                      borderRadius: '10px'
+                    }}>
+                      MAIS VENDIDO
+                    </span>
+                    <div>
+                      <h4 style={{ margin: 0, color: '#1e293b' }}>🪙 70 Moedas</h4>
+                      <span style={{ fontSize: '12px', color: '#64748b' }}>Pacote Profissional</span>
+                    </div>
+                    <span style={{ fontWeight: 'bold', color: '#2563eb', fontSize: '16px' }}>R$ 30,00</span>
+                  </div>
+
+                  {/* Pacote 3 */}
+                  <div
+                    onClick={() => handleGerarPix(150, 60)}
+                    style={{
+                      border: '2px solid #e2e8f0',
+                      borderRadius: '12px',
+                      padding: '14px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      opacity: carregandoPix ? 0.6 : 1
+                    }}
+                  >
+                    <div>
+                      <h4 style={{ margin: 0, color: '#1e293b' }}>🪙 150 Moedas</h4>
+                      <span style={{ fontSize: '12px', color: '#64748b' }}>Pacote Mestre</span>
+                    </div>
+                    <span style={{ fontWeight: 'bold', color: '#2563eb', fontSize: '16px' }}>R$ 60,00</span>
+                  </div>
+                </div>
+
+                {carregandoPix && (
+                  <p style={{ textAlign: 'center', color: '#2563eb', marginTop: '15px', fontWeight: 'bold' }}>
+                    Gerando chave PIX...
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <h3 style={{ margin: '0 0 6px 0', color: '#0f172a' }}>Pagamento via PIX</h3>
+                <p style={{ margin: '0 0 16px 0', color: '#64748b', fontSize: '14px' }}>
+                  Pacote: <strong>{pacoteSelecionado?.moedas} moedas</strong> (R$ {pacoteSelecionado?.valor.toFixed(2)})
+                </p>
+
+                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#475569', marginBottom: '6px' }}>
+                    PIX Copia e Cola:
+                  </label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={chavePix}
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      fontSize: '11px',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '6px',
+                      background: '#fff',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(chavePix);
+                      alert('Chave PIX copiada!');
+                    }}
+                    style={{
+                      marginTop: '8px',
+                      width: '100%',
+                      background: '#f1f5f9',
+                      border: '1px solid #cbd5e1',
+                      padding: '8px',
+                      borderRadius: '6px',
+                      fontWeight: 'bold',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      color: '#334155'
+                    }}
+                  >
+                    📋 Copiar Código PIX
+                  </button>
+                </div>
+
+                <button
+                  onClick={handleConfirmarPagamento}
+                  style={{
+                    width: '100%',
+                    background: '#22c55e',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  ✅ Confirmar Pagamento (Simular)
+                </button>
+              </>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
