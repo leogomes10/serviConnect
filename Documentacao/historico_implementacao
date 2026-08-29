@@ -118,4 +118,13 @@ npm install bcrypt && npm install --save-dev @types/bcrypt
     - Finalizada a interface do Modal de Recarga no `ProviderView.tsx`:
       * Adicionado o botão "+ Recarregar Moedas" no painel da carteira.
       * Criado fluxo interativo para escolha de pacotes (Iniciante 30, Profissional 70 e Mestre 150 moedas).
-      * Implementada a exibição do código PIX Copia e Cola e o botão para simulação e confirmação imediata da recarga no saldo do prestador.    
+      * Implementada a exibição do código PIX Copia e Cola e o botão para simulação e confirmação imediata da recarga no saldo do prestador.
+
+-------------------29/07/2026-------------------
+16. Implementação de Autenticação com JWT e Proteção de Rotas:
+    - Instalada e configurada a biblioteca 'jsonwebtoken' no backend Node.js/Express.
+    - Atualizada a rota 'POST /login-profissional' em 'auth.routes.ts' para gerar e assinar um token JWT com validade de 24 horas.
+    - Criado o middleware 'auth.middleware.ts' para interceptar, validar o token nos cabeçalhos 'Authorization' e garantir o acesso apenas a usuários autenticados.
+    - Protegidas as rotas críticas no backend ('POST /comprar-lead' e 'POST /gerar-pix-moedas'), injetando com segurança o ID do profissional a partir do payload do token.
+    - Atualizado o 'App.tsx' para salvar o token JWT no 'localStorage' no momento do login com sucesso.
+    - Atualizado o 'ProviderView.tsx' para resgatar o token do 'localStorage' e enviá-lo nos cabeçalhos da requisição ('Bearer Token'), garantindo a segurança completa das transações de moedas e compra de leads.

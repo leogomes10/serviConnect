@@ -27,7 +27,7 @@ export default function RoleSelection({
     e.preventDefault();
     
     try {
-      const response = await fetch('http://192.168.1.5:5000/login-profissional', {
+      const response = await fetch('http://localhost:5000/login-profissional', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: loginEmail, senha: loginSenha }),
@@ -54,7 +54,7 @@ export default function RoleSelection({
     }
 
     try {
-      const response = await fetch('http://192.168.1.5:5000/cadastrar-profissional', {
+      const response = await fetch('http://localhost:5000/cadastrar-profissional', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

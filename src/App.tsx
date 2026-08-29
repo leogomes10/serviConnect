@@ -36,7 +36,7 @@ export default function App() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await fetch('http://192.168.1.5:5000/profissionais'); // try "tente fazer isso", se a internet cair, ele pula para o cath
+        const response = await fetch('http://localhost:5000/profissionais'); // try "tente fazer isso", se a internet cair, ele pula para o cath
         const data = await response.json(); // transforma esse texto em um objeto javascript
         setServices(data); //atualiza a memoria do app com dados reais
       } catch (error) { // se algo der errado no "try", ele cai aqui
@@ -70,11 +70,11 @@ return (
     )}
 
     {/* se o papel for 2 (prestador), mostra o painel real que você já criou */}
-      {userRole === 2 && ( /*[cite: 1] */
+      {userRole === 2 && ( 
         <ProviderView 
           profissional={profissionalLogado} 
           onBack={() => {
-            setUserRole(0); //[cite: 1]
+            setUserRole(0); 
             setProfissionalLogado(null); // Limpa o estado ao deslogar
           }} 
         />

@@ -33,7 +33,7 @@ export function CustomerView({
 
   // Busca a lista de profissionais cadastrados
   useEffect(() => {
-    fetch('http://192.168.1.5:5000/profissionais')
+    fetch('http://localhost:5000/profissionais')
       .then(res => res.json())
       .then(dados => {
         console.log("DADOS QUE CHEGARAM DO BANCO:", dados);
@@ -69,7 +69,7 @@ export function CustomerView({
     setEnviandoPedido(true);
 
     try {
-      const response = await fetch('http://192.168.1.5:5000/pedidos-servico', {
+      const response = await fetch('http://localhost:5000/pedidos-servico', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

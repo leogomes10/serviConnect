@@ -52,7 +52,7 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
     const carregarPedidos = async () => {
       try {
         setLoading(true);
-        const res = await fetch('http://192.168.1.5:5000/pedidos-servico');
+        const res = await fetch('http://localhost:5000/pedidos-servico');
         if (res.ok) {
           const data = await res.json();
           setPedidos(data);
@@ -79,7 +79,7 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
     try {
       const token = localStorage.getItem('@ServiConnect:token');
 
-      const res = await fetch('http://192.168.1.5:5000/comprar-lead', {
+      const res = await fetch('http://localhost:5000/comprar-lead', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -123,7 +123,7 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
     try {
       const token = localStorage.getItem('@ServiConnect:token');
 
-      const res = await fetch('http://192.168.1.5:5000/gerar-pix-moedas', {
+      const res = await fetch('http://localhost:5000/gerar-pix-moedas', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -158,7 +158,7 @@ export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack
     try {
       const token = localStorage.getItem('@ServiConnect:token');
 
-      const res = await fetch('http://192.168.1.5:5000/confirmar-recarga', {
+      const res = await fetch('http://localhost:5000/confirmar-recarga', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

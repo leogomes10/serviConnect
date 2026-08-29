@@ -1,0 +1,15 @@
+# Documentação de Rotas da API (ServiConnect)
+
+### 1. Autenticação & Profissionais
+* `POST /cadastrar-profissional` - Cadastra um novo prestador com hash bcrypt e bônus de 50 moedas.
+* `POST /login-profissional` - Realiza login, valida senha e gera o token JWT (24h).
+* `GET /profissionais` - Retorna a lista pública de prestadores cadastrados para a tela do cliente.
+
+### 2. Pedidos & Mural de Oportunidades
+* `POST /pedidos-servico` - Cliente publica uma solicitação de orçamento/serviço.
+* `GET /pedidos-servico` - Retorna o mural de pedidos abertos para os profissionais.
+* `POST /comprar-lead` - Rota protegida (requer Bearer Token). Debita moedas e libera os dados do cliente.
+
+### 3. Carteira & Recarga PIX
+* `POST /gerar-pix-moedas` - Gera cobrança e string Pix Copia e Cola.
+* `POST /confirmar-recarga` - Valida pagamento e incrementa moedas ao saldo do profissional.
