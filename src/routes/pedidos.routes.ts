@@ -6,16 +6,16 @@ const router = Router();
 
 // Rota: Criar Pedido de Serviço (Cliente)
 router.post('/pedidos-servico', async (req, res) => {
-  const { cliente_nome, cliente_telefone, categoria, especialidade, descricao, cidade } = req.body;
-  const especialidadeFinal = especialidade || categoria || 'Geral';
+  const { cliente_nome, cliente_telefone, especialidade, descricao, cidade, foto_url } = req.body;
+  const especialidadeFinal = especialidade || 'Geral';
 
   try {
     const query = `
-      INSERT INTO pedidos_servico (cliente_nome, cliente_telefone, especialidade, descricao, cidade)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO pedidos_servico (cliente_nome, cliente_telefone, especialidade, descricao, cidade, foto_url)
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *;
     `;
-    const values = [cliente_nome, cliente_telefone, especialidadeFinal, descricao, cidade || 'Assis'];
+    const values = [cliente_nome, cliente_telefone, especialidadeFinal, descricao, cidade || 'Assis', foto_url || null];
     const result = await pool.query(query, values);
 
     res.status(201).json({

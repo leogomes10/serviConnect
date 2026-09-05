@@ -2,10 +2,10 @@ import { Router } from 'express'; // Importa a função Router do Express para c
 import bcrypt from 'bcryptjs'; // Importa a biblioteca de criptografia de senhas
 import jwt from 'jsonwebtoken'
 import { pool } from '../config/db'; // Importa o pool de conexões com o PostgreSQL
+import { JWT_SECRET } from '../config/jwt'; // Importa a chave secreta validada (sem fallback inseguro)
 
 
 const router = Router(); // Cria uma nova instância de roteador do Express
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key';
 
 // Rota: Cadastro de Profissional
 router.post('/cadastrar-profissional', async (req, res) => { // Define a rota HTTP POST de cadastro
@@ -78,21 +78,44 @@ router.post('/login-profissional', async (req, res) => { // Define a rota HTTP P
 }); // Fecha a rota /login-profissional
 
 // Rota: Listar todos os Profissionais para a busca do Cliente
-router.get('/profissionais', async (req, res) => { // Declara rota HTTP GET para listar prestadores
-  try { // Abre bloco try
+// Rota: Listar Profissionais com Foto e Portfólio de Serviços Realizados
+router.get('/profissionais', async (req, res) => {
+  try {
     const query = `
-      SELECT id, nome, email, especialidade, preco, role, saldo_moedas
-      FROM profissionais
-      ORDER BY nome ASC;
-    `; // Busca os dados públicos dos profissionais cadastrados (sem expor as senhas)
+      SELECT 
+        p.id, 
+        p.nome, 
+        p.email, 
+        p.especialidade, 
+        p.preco, 
+        p.role, 
+        p.saldo_moedas,
+        p.foto_url,
+        p.biografia,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', s.id,
+              'titulo', s.titulo,
+              'descricao', s.descricao,
+              'imagemUrl', s.imagem_url,
+              'data', s.data_conclusao
+            ) ORDER BY s.criado_em DESC
+          ) FILTER (WHERE s.id IS NOT NULL), '[]'
+        ) AS servicos_realizados,
+        COUNT(s.id)::int AS total_servicos
+      FROM profissionais p
+      LEFT JOIN servicos_realizados s ON s.profissional_id = p.id
+      GROUP BY p.id
+      ORDER BY p.nome ASC;
+    `;
     
-    const result = await pool.query(query); // Executa a consulta no PostgreSQL
-    res.json(result.rows); // Retorna a lista de profissionais em formato JSON para o React
+    const result = await pool.query(query);
+    res.json(result.rows);
 
-  } catch (error) { // Captura falhas
-    console.error('Erro ao buscar profissionais:', error); // Log no terminal
-    res.status(500).json({ erro: 'Erro interno ao buscar profissionais.' }); // Resposta de erro
-  } // Fecha catch
-}); // Fecha rota GET /profissionais
-
+  } catch (error) {
+    console.error('Erro ao buscar profissionais:', error);
+    res.status(500).json({ erro: 'Erro interno ao buscar profissionais.' });
+  }
+});
 export default router; // Exporta o módulo de rotas para uso no server.ts

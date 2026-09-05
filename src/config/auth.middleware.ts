@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from './jwt'; // Importa a chave secreta validada (sem fallback inseguro)
 
 // Estende a interface Request do Express para incluir os dados do usuário autenticado
 export interface RequestAutenticado extends Request {
@@ -18,8 +19,6 @@ export const autenticarToken = (req: RequestAutenticado, res: Response, next: Ne
   if (!token) {
     return res.status(401).json({ erro: 'Acesso negado. Token não fornecido.' });
   }
-
-  const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key';
 
   jwt.verify(token, JWT_SECRET, (err, usuarioDecodificado) => {
     if (err) {

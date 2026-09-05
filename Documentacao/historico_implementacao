@@ -128,3 +128,38 @@ npm install bcrypt && npm install --save-dev @types/bcrypt
     - Protegidas as rotas críticas no backend ('POST /comprar-lead' e 'POST /gerar-pix-moedas'), injetando com segurança o ID do profissional a partir do payload do token.
     - Atualizado o 'App.tsx' para salvar o token JWT no 'localStorage' no momento do login com sucesso.
     - Atualizado o 'ProviderView.tsx' para resgatar o token do 'localStorage' e enviá-lo nos cabeçalhos da requisição ('Bearer Token'), garantindo a segurança completa das transações de moedas e compra de leads.
+-------------------04/09/2026-------------------
+17. Redesign Visual da Tela Inicial (RoleSelection) e Identidade Orange:
+    - Removidos cards brancos e títulos secundários poluídos, adotando foco minimalista em apenas dois botões centrais.
+    - Definida nova paleta visual moderna com gradiente laranja e terracota (#f15a24 a #ce4d17).
+    - Implementado layout estilo "pill" com os avatares 3D (cliente e castor construtor) vazando para fora dos cards usando posicionamento absoluto (`h-32`, `-top-7` e `-bottom-3`) e efeito `pointer-events-none`.
+    - Ajustado o espaçamento responsivo para visualização limpa e intuitiva em smartphones.
+
+18. Suporte a Portfólio de Serviços Realizados e Perfil no Banco:
+    - Modeladas novas colunas e tabelas no PostgreSQL:
+      * Adicionadas as colunas `foto_url` e `biografia` na tabela `profissionais`.
+      * Criada a tabela relacional `servicos_realizados` com campos para `profissional_id`, `titulo`, `descricao`, `imagem_url` e `data_conclusao`.
+      * Adicionado índice `idx_servicos_profissional` para otimização de leitura.
+    - Criado o módulo de rotas `src/routes/portfolio.routes.ts` com endpoints protegidos via JWT para o prestador gerenciar seu portfólio e atualizar bio/foto.
+    - Atualizada a consulta `GET /profissionais` em `auth.routes.ts` com subconsulta `json_agg` para retornar foto e histórico de trabalhos agregados diretamente em JSON.
+
+-------------------05/09/2026-------------------
+19. Reestruturação da Interface do Cliente (CustomerViews.tsx) e Regra de Negócio:
+    - Padronizada a interface do cliente com o cabeçalho e degradê laranja institucional.
+    - Atualizado o card do prestador com avatar/foto de perfil, especialidade, avaliação e contagem de serviços concluídos.
+    - Criado o modal expansível de **Portfólio**, permitindo ao cliente inspecionar trabalhos anteriores com fotos e detalhes para validação de credibilidade.
+    - Removido o botão de orçamento direto com o prestador para proteger o contato e centralizar as demandas exclusivamente no mural geral.
+    - Implementado o modal de **Solicitação de Orçamento Geral** integrado com a API (`POST /pedidos-servico`), permitindo ao cliente registrar pedidos com nome, telefone, categoria e descrição do problema.
+
+20. Proteção de Contato, Fluxo de Moedas e Mural do Prestador (ProviderView.tsx):
+    - Atualizado o painel do prestador com o cabeçalho da carteira em tempo real e atalho para recarga Pix.
+    - Implementada a trava de contato protegido: o telefone do cliente permanece mascarado no mural até que o profissional clique em "Liberar Contato" e confirme o débito de 15 moedas.
+    - Consumida a rota autenticada `POST /comprar-lead`, enviando o token JWT via cabeçalho `Authorization: Bearer`.
+    - Ao confirmar a transação, o sistema debita as moedas localmente e na API, liberando o botão com link direto para o WhatsApp do cliente (`wa.me`).
+    - Integrado o modal de recarga com simulação de código Pix Copia e Cola (`POST /gerar-pix-moedas` e `POST /confirmar-recarga`).
+
+21. Depuração de Rede, TypeScript e Persistência de Autenticação:
+    - Atualizado o `server.ts` para escutar na interface `0.0.0.0:5000`, viabilizando o teste simultâneo via Wi-Fi pelo celular (`192.168.5.109:5000`).
+    - Corrigido erro de tipagem no `App.tsx` referente às propriedades (`services`, `loading`, `searchTerm`, `onBack`) passadas ao componente `CustomerViews`.
+    - Corrigido fechamento prematuro de bloco na função `handleLoginSucesso` no `App.tsx` e unificada a variável de estado `setServices`.
+    - Resolvido erro de "Token inválido ou expirado" garantindo que o token JWT retornado no login seja persistido no `localStorage` antes da troca de rotas.

@@ -24,26 +24,31 @@ export default function RoleSelection({
 
   // 2. FUNÇÃO QUE CHAMA A ROTA DE LOGIN NO SERVER.TS (Corrigido para IP .5)
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const response = await fetch('http://localhost:5000/login-profissional', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: loginEmail, senha: loginSenha }),
-      });
+  e.preventDefault();
+  
+  try {
+    const response = await fetch('http://192.168.5.109:5000/login-profissional', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: loginEmail, senha: loginSenha }),
+    });
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (response.ok) {
-        onLoginSucesso(data.profissional || data);
-      } else {
-        alert(data.erro || data.error || "Erro ao fazer login");
+    if (response.ok) {
+      // SALVA O TOKEN JWT NO NAVEGADOR
+      if (data.token) {
+        localStorage.setItem('token', data.token);
       }
-    } catch (error) {
-      alert("Servidor desligado ou erro de conexão.");
+      
+      onLoginSucesso(data.profissional || data);
+    } else {
+      alert(data.erro || data.error || "Erro ao fazer login");
     }
-  };
+  } catch (error) {
+    alert("Servidor desligado ou erro de conexão.");
+  }
+};
 
   // 3. FUNÇÃO DE CADASTRO (Corrigido rota /cadastrar-profissional e IP .5)
   const salvarCadastro = async (e: React.FormEvent) => {
@@ -54,7 +59,7 @@ export default function RoleSelection({
     }
 
     try {
-      const response = await fetch('http://localhost:5000/cadastrar-profissional', {
+      const response = await fetch('http://192.168.5.109:5000/cadastrar-profissional', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -156,55 +161,64 @@ export default function RoleSelection({
     );
   }
 
-  // --- TELA DE SELEÇÃO INICIAL ---
+  // --- TELA DE SELEÇÃO INICIAL MODERNA (MINIMALISTA E LARANJA) ---
   if (tela === 'selecao') {
     return (
       <div 
-        className="min-h-screen flex flex-col items-center justify-center p-4 relative"
-        style={{
-          backgroundColor: '#000c36',
-          backgroundImage: 'url("/bg-pattern.png")',
-          backgroundRepeat: 'repeat',
-          backgroundSize: '260px'
-        }}
+        className="min-h-screen flex flex-col justify-between items-center px-6 py-10 select-none bg-gradient-to-b from-[#f26d24] via-[#ee5922] to-[#c94212]"
       >
-        <h1 className="text-4xl font-bold text-white mb-2">Bem-vindo ao ServiConnect</h1>
-        <p className="text-indigo-100 mb-12">Serviços verificados e pagamento seguro em Assis.</p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
-          {/* OPÇÃO: CLIENTE */}
-          <div 
-            onClick={() => onSelect(1)} 
-            className="bg-white p-10 rounded-3xl shadow-xl flex flex-col items-center text-center cursor-pointer hover:scale-105 transition-all"
-          >
-            <div className="bg-indigo-100 p-6 rounded-full mb-6">
-              <Search className="w-12 h-12 text-indigo-600" />
-            </div>
-            <h2 className="text-2xl font-bold mb-2">Preciso de um serviço</h2>
-            <p className="text-slate-500">Encontre profissionais em poucos cliques.</p>
-          </div>
-          
-          {/* OPÇÃO: PROFISSIONAL */}
+        {/* Título / Marca */}
+        <div className="pt-6 text-center">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight drop-shadow-md">
+            ServiConnect
+          </h1>
+        </div>
+
+        {/* Bloco Central: Apenas os 2 Botões */}
+        <div className="flex flex-col gap-6 w-full max-w-sm my-auto">
+          {/* BOTÃO 1: CONTRATAR */}
           <button 
-            onClick={() => setTela('login')} 
-            className="bg-white p-10 rounded-3xl shadow-xl flex flex-col items-center text-center cursor-pointer hover:scale-105 transition-transform"
+            onClick={() => onSelect(1)}
+            className="group relative flex items-center justify-between bg-gradient-to-r from-[#d8541a] to-[#ba3c0e] hover:brightness-110 active:scale-95 transition-all duration-200 rounded-3xl p-3 pr-6 shadow-xl border border-white/10 text-left overflow-visible"
           >
-            <div className="bg-emerald-100 p-6 rounded-full mb-6">
-              <Wrench className="w-12 h-12 text-emerald-600" />
+            {/* Personagem Cliente */}
+            <div className="w-20 h-20 -my-3 flex-shrink-0 flex items-center justify-center">
+              <img 
+                src="/cliente-avatar.png" 
+                alt="Cliente" 
+                className="h-24 w-auto object-contain drop-shadow-lg group-hover:scale-105 transition-transform" 
+              />
             </div>
-            <h2 className="text-2xl font-bold mb-2">Sou um profissional</h2>
-            <p className="text-slate-500">Gerencie sua agenda e aumente seus ganhos.</p>
+            
+            <span className="text-base font-black tracking-wide text-white uppercase text-center flex-1">
+              Quero contratar um serviço!
+            </span>
+          </button>
+
+          {/* BOTÃO 2: PROFISSIONAL */}
+          <button 
+            onClick={() => setTela('login')}
+            className="group relative flex items-center justify-between bg-gradient-to-r from-[#d8541a] to-[#ba3c0e] hover:brightness-110 active:scale-95 transition-all duration-200 rounded-3xl p-3 pr-6 shadow-xl border border-white/10 text-left overflow-visible"
+          >
+            {/* Mascote Profissional */}
+            <div className="w-20 h-20 -my-3 flex-shrink-0 flex items-center justify-center">
+              <img 
+                src="/profissional-mascote.png" 
+                alt="Profissional" 
+                className="h-24 w-auto object-contain drop-shadow-lg group-hover:scale-105 transition-transform" 
+              />
+            </div>
+
+            <span className="text-base font-black tracking-wide text-white uppercase text-center flex-1">
+              Sou um profissional!
+            </span>
           </button>
         </div>
 
-        {/* BOTÃO DE ATALHO PARA O ADMINISTRADOR */}
-        <button 
-          onClick={() => onSelect(3)} 
-          className="btn-atalho-admin"
-          title="Painel de Controle do Admin"
-        >
-          <span>Painel Admin</span>
-        </button>
+        {/* Rodapé sutil */}
+        <div className="text-center text-xs text-orange-200/80 pb-2">
+          <span>Versão 1.0.21 • Termos de privacidade</span>
+        </div>
       </div>
     );
   }

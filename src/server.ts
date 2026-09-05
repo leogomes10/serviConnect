@@ -1,29 +1,29 @@
-import dotenv from 'dotenv'; // Importa a biblioteca dotenv para inicialização de variáveis
-dotenv.config(); // Carrega o arquivo de ambiente .env no processo Node
+import dotenv from 'dotenv';
+dotenv.config();
 
-import express from 'express'; // Importa o servidor web Express
-import cors from 'cors'; // Importa o middleware CORS de segurança
+import express from 'express';
+import cors from 'cors';
 
-// Importa os arquivos com os módulos de rotas separados
-import authRoutes from './routes/auth.routes'; // Importa as rotas de Cadastro e Login
-import pedidosRoutes from './routes/pedidos.routes'; // Importa as rotas de Pedidos e Leads
-import moedasRoutes from './routes/moedas.routes'; // Importa as rotas de Pix e Recarga
+// Módulos de rotas
+import authRoutes from './routes/auth.routes';
+import pedidosRoutes from './routes/pedidos.routes';
+import moedasRoutes from './routes/moedas.routes';
+import portfolioRoutes from './routes/portfolio.routes'; // <-- NOVO
 
-const app = express(); // Instancia a aplicação do servidor Express
+const app = express();
 
-// Middlewares Globais da Aplicação
-app.use(cors()); // Ativa o CORS para permitir requisições do frontend React
-app.use(express.json()); // Ativa o interpretador automático de JSON nas requisições
+app.use(cors());
+app.use(express.json());
 
-// Registro e conexão de todas as rotas no app Express
-app.use(authRoutes); // Conecta as rotas de autenticação
-app.use(pedidosRoutes); // Conecta as rotas de pedidos e compra de leads
-app.use(moedasRoutes); // Conecta as rotas de moedas e Pix
+// Registro das rotas
+app.use(authRoutes);
+app.use(pedidosRoutes);
+app.use(moedasRoutes);
+app.use(portfolioRoutes); // <-- NOVO
 
-// Configuração da porta de execução
-const PORT = process.env.PORT || 5000; // Define a porta vinda do .env ou usa 5000 por padrão
+const PORT = Number(process.env.PORT) || 5000;
 
-// Inicia o servidor e coloca a aplicação para escutar a porta definida
-app.listen(PORT, () => { // Inicialização do servidor HTTP
-  console.log(`🚀 Servidor ServiConnect rodando com sucesso na porta ${PORT}!`); // Log no terminal confirmando a execução
-}); // Finaliza escuta do servidor
+// O '0.0.0.0' permite que o celular acesse pelo IP (192.168.5.109:5000)
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Servidor ServiConnect rodando com sucesso na porta ${PORT}!`);
+});

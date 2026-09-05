@@ -1,550 +1,434 @@
 import React, { useState, useEffect } from 'react';
+import { 
+  Coins, 
+  PlusCircle, 
+  MapPin, 
+  Lock, 
+  Phone, 
+  ArrowLeft, 
+  CheckCircle2, 
+  AlertCircle,
+  X,
+  Copy,
+  QrCode
+} from 'lucide-react';
 
 interface Pedido {
   id: number;
+  cliente_nome: string;
+  cliente_telefone?: string;
   especialidade: string;
+  categoria?: string;
   descricao: string;
   cidade: string;
   custo_moedas?: number;
-  limite_respostas?: number;
-  data_criacao?: string;
-  cliente_nome?: string;
-  cliente_telefone?: string;
 }
 
-interface ProviderViewProps {
-  profissional: {
-    id: number;
-    nome: string;
-    saldo_moedas?: number;
-  } | null;
+export default function ProviderView({
+  profissional,
+  onBack
+}: {
+  profissional: any;
   onBack: () => void;
-}
-
-export const ProviderView: React.FC<ProviderViewProps> = ({ profissional, onBack }) => {
+}) {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mensagemErro, setMensagemErro] = useState('');
-
-  // --- ESTADOS PARA O MODAL DE RECARGA ---
-  const [modalRecargaAberto, setModalRecargaAberto] = useState(false);
-  const [passoRecarga, setPassoRecarga] = useState<'selecao' | 'pix'>('selecao');
+  const [saldoMoedas, setSaldoMoedas] = useState<number>(profissional?.saldo_moedas || 50);
+  
+  // Guarda os contatos desbloqueados neste login: { [pedidoId]: telefoneReal }
+  const [leadsLiberados, setLeadsLiberados] = useState<{ [key: number]: string }>({});
+  
+  // Estados para o Modal de Recarga Pix
+  const [modalRecarga, setModalRecarga] = useState(false);
   const [pacoteSelecionado, setPacoteSelecionado] = useState<{ moedas: number; valor: number } | null>(null);
-  const [chavePix, setChavePix] = useState('');
-  const [carregandoPix, setCarregandoPix] = useState(false);
-  const [transacaoId, setTransacaoId] = useState<number | null>(null);
+  const [dadosPix, setDadosPix] = useState<{ id: number; codigoPix: string } | null>(null);
+  const [processandoPix, setProcessandoPix] = useState(false);
 
-  const [saldoMoedas, setSaldoMoedas] = useState<number>(profissional?.saldo_moedas ?? 50);
-
-  if (!profissional) {
-    return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        <p>Acesso não autorizado ou sessão expirada.</p>
-        <button onClick={onBack} style={{ padding: '8px 16px', cursor: 'pointer' }}>
-          Voltar para o início
-        </button>
-      </div>
-    );
-  }
-
-  // Busca os pedidos no backend
-  useEffect(() => {
-    const carregarPedidos = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch('http://localhost:5000/pedidos-servico');
-        if (res.ok) {
-          const data = await res.json();
-          setPedidos(data);
-        }
-      } catch (err) {
-        console.error('Erro ao buscar pedidos:', err);
-      } finally {
-        setLoading(false);
+  // 1. Carregar Mural de Pedidos do Backend
+  const carregarPedidos = async () => {
+    try {
+      const res = await fetch('http://192.168.5.109:5000/pedidos-servico');
+      if (res.ok) {
+        const data = await res.json();
+        setPedidos(data);
       }
-    };
+    } catch (err) {
+      console.error('Erro ao buscar oportunidades:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     carregarPedidos();
   }, []);
 
-  // Função de comprar lead (Atualizada com Token JWT)
-  const handleComprarLead = async (idPedido: number, custoMoedas: number = 15) => {
-    setMensagemErro('');
+  // 2. Fluxo: Desbloquear Contato (Comprar Lead)
+  const handleDesbloquearLead = async (pedido: Pedido) => {
+    const custo = pedido.custo_moedas || 15;
 
-    if (saldoMoedas < custoMoedas) {
-      alert('Saldo insuficiente de moedas! Recarregue sua carteira.');
+    if (saldoMoedas < custo) {
+      alert(`Você precisa de ${custo} moedas para desbloquear este contato. Seu saldo atual é ${saldoMoedas}.`);
+      setModalRecarga(true);
       return;
     }
 
-    try {
-      const token = localStorage.getItem('@ServiConnect:token');
+    const confirmar = window.confirm(
+      `Deseja usar ${custo} moedas para revelar o contato de ${pedido.cliente_nome}?`
+    );
+    if (!confirmar) return;
 
-      const res = await fetch('http://localhost:5000/comprar-lead', {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://192.168.5.109:5000/comprar-lead', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // 🔑 Token JWT enviado
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          pedido_id: idPedido,
-          custo_moedas: custoMoedas
-        }),
+          pedido_id: pedido.id,
+          custo_moedas: custo
+        })
       });
 
       const data = await res.json();
 
-      if (!res.ok) {
-        setMensagemErro(data.erro || 'Erro ao desbloquear contato');
-        return;
+      if (res.ok) {
+        setSaldoMoedas(data.novo_saldo);
+        setLeadsLiberados(prev => ({
+          ...prev,
+          [pedido.id]: data.contato_cliente.cliente_telefone
+        }));
+        alert('Contato liberado com sucesso!');
+      } else {
+        alert(data.erro || 'Não foi possível liberar o contato.');
       }
-
-      setSaldoMoedas(data.novo_saldo);
-
-      setPedidos((prevPedidos) =>
-        prevPedidos.map((p) =>
-          p.id === idPedido
-            ? { ...p, cliente_nome: data.contato_cliente.cliente_nome, cliente_telefone: data.contato_cliente.cliente_telefone }
-            : p
-        )
-      );
-
-      alert('Contato desbloqueado com sucesso!');
-    } catch (err) {
-      console.error('Erro na requisição:', err);
-      setMensagemErro('Erro de conexão com o servidor.');
+    } catch (error) {
+      alert('Erro ao conectar com o servidor para comprar o lead.');
     }
   };
 
-  // --- FUNÇÕES DA RECARGA VIA PIX ---
+  // 3. Fluxo de Moedas: Gerar Pix
   const handleGerarPix = async (moedas: number, valor: number) => {
-    setCarregandoPix(true);
-    setPacoteSelecionado({ moedas, valor });
-
+    setProcessandoPix(true);
     try {
-      const token = localStorage.getItem('@ServiConnect:token');
-
-      const res = await fetch('http://localhost:5000/gerar-pix-moedas', {
+      const res = await fetch('http://192.168.5.109:5000/gerar-pix-moedas', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // 🔑 Token JWT enviado
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          profissional_id: profissional.id,
           quantidade_moedas: moedas,
           valor_reais: valor
-        }),
+        })
       });
 
       const data = await res.json();
-
       if (res.ok) {
-        setChavePix(data.codigo_pix);
-        setTransacaoId(data.transacao_id);
-        setPassoRecarga('pix');
+        setDadosPix({
+          id: data.transacao.id,
+          codigoPix: data.transacao.codigo_pix
+        });
       } else {
-        alert(data.erro || 'Erro ao gerar cobrança PIX');
+        alert('Erro ao gerar código Pix.');
       }
     } catch (err) {
-      console.error('Erro ao gerar PIX:', err);
-      alert('Erro de conexão ao gerar o PIX.');
+      alert('Erro na conexão com o servidor.');
     } finally {
-      setCarregandoPix(false);
+      setProcessandoPix(false);
     }
   };
 
+  // 4. Fluxo de Moedas: Confirmar Pagamento Simulado
   const handleConfirmarPagamento = async () => {
-    if (!transacaoId) return;
+    if (!dadosPix || !pacoteSelecionado) return;
 
     try {
-      const token = localStorage.getItem('@ServiConnect:token');
-
-      const res = await fetch('http://localhost:5000/confirmar-recarga', {
+      const res = await fetch('http://192.168.5.109:5000/confirmar-recarga', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // 🔑 Token JWT enviado
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          transacao_id: transacaoId,
-          profissional_id: profissional.id
-        }),
+          transacao_id: dadosPix.id,
+          profissional_id: profissional.id,
+          quantidade_moedas: pacoteSelecionado.moedas
+        })
       });
 
       const data = await res.json();
-
       if (res.ok) {
-        alert(`🎉 Pagamento confirmado! ${pacoteSelecionado?.moedas} moedas adicionadas à sua conta.`);
-        setSaldoMoedas(data.novo_saldo);
-        fecharModalRecarga();
+        setSaldoMoedas(data.profissional.saldo_moedas);
+        alert(`Pagamento aprovado! +${pacoteSelecionado.moedas} moedas adicionadas à sua carteira.`);
+        setModalRecarga(false);
+        setDadosPix(null);
+        setPacoteSelecionado(null);
       } else {
-        alert(data.erro || 'Erro ao confirmar pagamento.');
+        alert('Erro ao confirmar recarga.');
       }
-    } catch (err) {
-      console.error('Erro ao confirmar pagamento:', err);
-      alert('Erro de conexão ao confirmar pagamento.');
+    } catch (error) {
+      alert('Erro no processamento da confirmação.');
     }
-  };
-
-  const fecharModalRecarga = () => {
-    setModalRecargaAberto(false);
-    setPassoRecarga('selecao');
-    setPacoteSelecionado(null);
-    setChavePix('');
-    setTransacaoId(null);
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <button 
-        onClick={onBack}
-        style={{ 
-          marginBottom: '15px', 
-          background: 'none', 
-          border: 'none', 
-          color: '#2563eb', 
-          cursor: 'pointer', 
-          fontWeight: 'bold' 
-        }}
-      >
-        ← Sair / Voltar
-      </button>
+    <div className="min-h-screen bg-slate-50 text-slate-800 pb-20">
+      
+      {/* HEADER SUPERIOR */}
+      <header className="sticky top-0 z-30 bg-[#f15a24] text-white px-4 py-3.5 shadow-md flex items-center justify-between">
+        <button 
+          onClick={onBack}
+          className="flex items-center gap-1.5 text-xs font-bold bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full transition active:scale-95"
+        >
+          <ArrowLeft className="w-4 h-4" /> Sair / Trocar Perfil
+        </button>
 
-      {/* Banner de Carteira */}
-      <div
-        style={{
-          background: '#2563eb',
-          color: '#fff',
-          padding: '16px',
-          borderRadius: '12px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '20px',
-        }}
-      >
-        <div>
-          <h3 style={{ margin: 0 }}>Olá, {profissional.nome}</h3>
-          <p style={{ margin: 0, opacity: 0.9, fontSize: '14px' }}>Mural de Oportunidades</p>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <span style={{ fontSize: '12px', opacity: 0.8 }}>Sua Carteira</span>
-          <h2 style={{ margin: '0 0 6px 0', color: '#facc15' }}>🪙 {saldoMoedas} moedas</h2>
-          <button
-            onClick={() => setModalRecargaAberto(true)}
-            style={{
-              background: '#facc15',
-              color: '#1e3a8a',
-              border: 'none',
-              padding: '4px 10px',
-              borderRadius: '6px',
-              fontWeight: 'bold',
-              fontSize: '12px',
-              cursor: 'pointer'
-            }}
-          >
-            + Recarregar Moedas
-          </button>
-        </div>
-      </div>
+        <span className="font-extrabold text-sm tracking-wide">Painel do Profissional</span>
+      </header>
 
-      {mensagemErro && (
-        <div style={{ background: '#fee2e2', color: '#dc2626', padding: '10px', borderRadius: '8px', marginBottom: '15px' }}>
-          {mensagemErro}
-        </div>
-      )}
-
-      <h3>Oportunidades em Assis e Região</h3>
-
-      {loading ? (
-        <p>Carregando pedidos...</p>
-      ) : pedidos.length === 0 ? (
-        <p>Nenhum pedido de serviço aberto no momento.</p>
-      ) : (
-        pedidos.map((pedido) => (
-          <div
-            key={pedido.id}
-            style={{
-              border: '1px solid #e5e7eb',
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '16px',
-              background: '#fff',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span
-                style={{
-                  background: '#eff6ff',
-                  color: '#2563eb',
-                  padding: '4px 8px',
-                  borderRadius: '6px',
-                  fontWeight: 'bold',
-                  fontSize: '12px',
-                }}
-              >
-                {pedido.especialidade}
+      <main className="max-w-xl mx-auto px-4 pt-4 space-y-5">
+        
+        {/* CARD DA CARTEIRA & BOAS-VINDAS */}
+        <div className="bg-gradient-to-br from-[#f15a24] to-[#ce4d17] rounded-3xl p-5 text-white shadow-xl flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-orange-200 uppercase font-semibold tracking-wider">Bem-vindo(a)</p>
+              <h2 className="text-2xl font-black">{profissional?.nome || 'Profissional'}</h2>
+              <span className="inline-block mt-0.5 bg-white/20 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full">
+                {profissional?.especialidade || 'Prestador Verificado'}
               </span>
-              <span style={{ fontSize: '12px', color: '#6b7280' }}>📍 {pedido.cidade}</span>
             </div>
 
-            <p style={{ color: '#374151', margin: '12px 0' }}>{pedido.descricao}</p>
-
-            {pedido.cliente_telefone ? (
-              <div
-                style={{
-                  background: '#f0fdf4',
-                  border: '1px solid #bbf7d0',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  marginTop: '12px',
-                }}
-              >
-                <p style={{ margin: '0 0 6px 0', fontWeight: 'bold', color: '#166534' }}>
-                  👤 Cliente: {pedido.cliente_nome}
-                </p>
-                <a
-                  href={`https://wa.me/55${pedido.cliente_telefone.replace(/\D/g, '')}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    display: 'inline-block',
-                    background: '#22c55e',
-                    color: '#fff',
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                    textDecoration: 'none',
-                    fontWeight: 'bold',
-                    fontSize: '14px',
-                  }}
-                >
-                  💬 Chamar no WhatsApp ({pedido.cliente_telefone})
-                </a>
+            {/* Saldo de Moedas */}
+            <div className="text-right bg-black/15 p-3 rounded-2xl border border-white/10">
+              <span className="text-[11px] text-orange-200 block font-medium">Sua Carteira</span>
+              <div className="flex items-center gap-1.5 justify-end mt-0.5">
+                <Coins className="w-5 h-5 text-amber-300 fill-amber-400" />
+                <span className="text-2xl font-black text-amber-300">{saldoMoedas}</span>
               </div>
-            ) : (
-              <button
-                onClick={() => handleComprarLead(pedido.id, pedido.custo_moedas || 15)}
-                style={{
-                  width: '100%',
-                  background: '#2563eb',
-                  color: '#fff',
-                  border: 'none',
-                  padding: '10px',
-                  borderRadius: '8px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  marginTop: '8px',
-                }}
-              >
-                🔓 Desbloquear Contato por {pedido.custo_moedas || 15} moedas
-              </button>
-            )}
+              <span className="text-[10px] text-orange-100">moedas</span>
+            </div>
           </div>
-        ))
-      )}
 
-      {/* MODAL DE RECARGA DE MOEDAS */}
-      {modalRecargaAberto && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(15, 23, 42, 0.65)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '16px',
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: '#fff',
-            borderRadius: '16px',
-            padding: '24px',
-            maxWidth: '450px',
-            width: '100%',
-            position: 'relative',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
-          }}>
-            <button
-              onClick={fecharModalRecarga}
-              style={{
-                position: 'absolute',
-                top: '16px',
-                right: '16px',
-                background: 'none',
-                border: 'none',
-                fontSize: '18px',
-                cursor: 'pointer',
-                color: '#64748b'
-              }}
-            >
-              ✕
-            </button>
+          {/* Botão de Recarga */}
+          <button 
+            onClick={() => {
+              setDadosPix(null);
+              setPacoteSelecionado(null);
+              setModalRecarga(true);
+            }}
+            className="w-full bg-white text-[#ce4d17] hover:bg-orange-50 font-black py-3 px-4 rounded-2xl text-sm shadow-md transition active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <PlusCircle className="w-4 h-4 text-[#ce4d17]" /> Recarregar Moedas com Pix
+          </button>
+        </div>
 
-            {passoRecarga === 'selecao' ? (
-              <>
-                <h3 style={{ margin: '0 0 6px 0', color: '#0f172a' }}>Comprar Moedas</h3>
-                <p style={{ margin: '0 0 20px 0', color: '#64748b', fontSize: '14px' }}>
-                  Escolha um pacote para liberar contatos de clientes no mural.
-                </p>
+        {/* TÍTULO DO MURAL */}
+        <div className="flex items-center justify-between pt-1">
+          <h3 className="text-lg font-black text-slate-900 tracking-tight">
+            Oportunidades em Assis e Região
+          </h3>
+          <span className="text-xs text-slate-500 font-bold bg-slate-200/80 px-2.5 py-0.5 rounded-full">
+            {pedidos.length} disponíveis
+          </span>
+        </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {/* Pacote 1 */}
-                  <div
-                    onClick={() => handleGerarPix(30, 15)}
-                    style={{
-                      border: '2px solid #e2e8f0',
-                      borderRadius: '12px',
-                      padding: '14px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                      transition: '0.2s',
-                      opacity: carregandoPix ? 0.6 : 1
-                    }}
-                  >
-                    <div>
-                      <h4 style={{ margin: 0, color: '#1e293b' }}>🪙 30 Moedas</h4>
-                      <span style={{ fontSize: '12px', color: '#64748b' }}>Pacote Iniciante</span>
-                    </div>
-                    <span style={{ fontWeight: 'bold', color: '#2563eb', fontSize: '16px' }}>R$ 15,00</span>
-                  </div>
+        {/* LISTAGEM DE PEDIDOS / LEADS */}
+        {loading ? (
+          <p className="text-center py-10 text-slate-400 text-sm">Carregando oportunidades...</p>
+        ) : pedidos.length === 0 ? (
+          <div className="bg-white rounded-3xl p-8 text-center border border-slate-200/60 shadow-sm">
+            <AlertCircle className="w-10 h-10 text-orange-400 mx-auto mb-2" />
+            <p className="font-bold text-slate-700">Nenhum pedido aberto no momento.</p>
+            <p className="text-xs text-slate-400 mt-1">Assim que um cliente solicitar um serviço em Assis, ele aparecerá aqui.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {pedidos.map((pedido) => {
+              const liberado = leadsLiberados[pedido.id] !== undefined;
+              const telefoneExibido = liberado ? leadsLiberados[pedido.id] : pedido.cliente_telefone;
+              const custo = pedido.custo_moedas || 15;
 
-                  {/* Pacote 2 */}
-                  <div
-                    onClick={() => handleGerarPix(70, 30)}
-                    style={{
-                      border: '2px solid #2563eb',
-                      background: '#eff6ff',
-                      borderRadius: '12px',
-                      padding: '14px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                      position: 'relative',
-                      opacity: carregandoPix ? 0.6 : 1
-                    }}
-                  >
-                    <span style={{
-                      position: 'absolute',
-                      top: '-10px',
-                      right: '12px',
-                      background: '#2563eb',
-                      color: '#fff',
-                      fontSize: '10px',
-                      fontWeight: 'bold',
-                      padding: '2px 8px',
-                      borderRadius: '10px'
-                    }}>
-                      MAIS VENDIDO
+              return (
+                <div 
+                  key={pedido.id}
+                  className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm hover:border-orange-200 transition space-y-4"
+                >
+                  {/* Topo do Pedido: Categoria e Cidade */}
+                  <div className="flex items-center justify-between">
+                    <span className="bg-orange-100/80 text-[#ce4d17] text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider">
+                      {pedido.especialidade || pedido.categoria}
                     </span>
-                    <div>
-                      <h4 style={{ margin: 0, color: '#1e293b' }}>🪙 70 Moedas</h4>
-                      <span style={{ fontSize: '12px', color: '#64748b' }}>Pacote Profissional</span>
+                    <div className="flex items-center gap-1 text-xs text-slate-500 font-semibold">
+                      <MapPin className="w-3.5 h-3.5 text-[#f15a24]" />
+                      <span>{pedido.cidade || 'Assis'}</span>
                     </div>
-                    <span style={{ fontWeight: 'bold', color: '#2563eb', fontSize: '16px' }}>R$ 30,00</span>
                   </div>
 
-                  {/* Pacote 3 */}
-                  <div
-                    onClick={() => handleGerarPix(150, 60)}
-                    style={{
-                      border: '2px solid #e2e8f0',
-                      borderRadius: '12px',
-                      padding: '14px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                      opacity: carregandoPix ? 0.6 : 1
-                    }}
-                  >
-                    <div>
-                      <h4 style={{ margin: 0, color: '#1e293b' }}>🪙 150 Moedas</h4>
-                      <span style={{ fontSize: '12px', color: '#64748b' }}>Pacote Mestre</span>
+                  {/* Descrição da Necessidade */}
+                  <p className="text-slate-800 text-sm font-medium leading-relaxed bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                    "{pedido.descricao}"
+                  </p>
+
+                  {/* Card do Cliente & Contato Protegido */}
+                  <div className={`p-4 rounded-2xl border transition-all ${
+                    liberado 
+                      ? 'bg-emerald-50/60 border-emerald-200' 
+                      : 'bg-orange-50/40 border-orange-100'
+                  }`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider block">Cliente</span>
+                        <p className="font-extrabold text-slate-900 text-sm">{pedido.cliente_nome}</p>
+                      </div>
+
+                      {/* Status de Liberação */}
+                      {liberado ? (
+                        <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Liberado
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                          <Lock className="w-3 h-3" /> Contato Protegido
+                        </span>
+                      )}
                     </div>
-                    <span style={{ fontWeight: 'bold', color: '#2563eb', fontSize: '16px' }}>R$ 60,00</span>
+
+                    {/* BOTÃO DE AÇÃO: SE LIBERADO -> WHATSAPP | SE BLOQUEADO -> DESBLOQUEAR */}
+                    {liberado ? (
+                      <a
+                        href={`https://wa.me/55${telefoneExibido?.replace(/\D/g, '')}?text=Olá%20${encodeURIComponent(pedido.cliente_nome)},%20vi%20seu%20pedido%20no%20ServiConnect!`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-extrabold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition active:scale-98"
+                      >
+                        <Phone className="w-4 h-4 fill-white" />
+                        Chamar no WhatsApp ({telefoneExibido})
+                      </a>
+                    ) : (
+                      <button
+                        onClick={() => handleDesbloquearLead(pedido)}
+                        className="w-full bg-[#f15a24] hover:bg-[#ce4d17] text-white font-extrabold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shadow-md transition active:scale-98 cursor-pointer"
+                      >
+                        <Lock className="w-3.5 h-3.5" />
+                        Liberar Contato • <Coins className="w-3.5 h-3.5 fill-amber-300 text-amber-300" /> {custo} Moedas
+                      </button>
+                    )}
                   </div>
                 </div>
+              );
+            })}
+          </div>
+        )}
 
-                {carregandoPix && (
-                  <p style={{ textAlign: 'center', color: '#2563eb', marginTop: '15px', fontWeight: 'bold' }}>
-                    Gerando chave PIX...
+      </main>
+
+      {/* MODAL DE RECARGA DE MOEDAS VIA PIX */}
+      {modalRecarga && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-200">
+            
+            {/* Cabeçalho do Modal */}
+            <div className="p-4 bg-gradient-to-r from-[#f15a24] to-[#ce4d17] text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Coins className="w-6 h-6 text-amber-300 fill-amber-300" />
+                <h3 className="font-black text-lg">Comprar Moedas</h3>
+              </div>
+              <button 
+                onClick={() => setModalRecarga(false)}
+                className="p-1 rounded-full bg-black/20 hover:bg-black/30 active:scale-95 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Conteúdo do Modal */}
+            <div className="p-5 overflow-y-auto space-y-4">
+              {!dadosPix ? (
+                <>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Escolha um pacote para desbloquear contatos de clientes diretamente:
                   </p>
-                )}
-              </>
-            ) : (
-              <>
-                <h3 style={{ margin: '0 0 6px 0', color: '#0f172a' }}>Pagamento via PIX</h3>
-                <p style={{ margin: '0 0 16px 0', color: '#64748b', fontSize: '14px' }}>
-                  Pacote: <strong>{pacoteSelecionado?.moedas} moedas</strong> (R$ {pacoteSelecionado?.valor.toFixed(2)})
-                </p>
 
-                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#475569', marginBottom: '6px' }}>
-                    PIX Copia e Cola:
-                  </label>
-                  <input
-                    type="text"
-                    readOnly
-                    value={chavePix}
-                    style={{
-                      width: '100%',
-                      padding: '8px',
-                      fontSize: '11px',
-                      border: '1px solid #cbd5e1',
-                      borderRadius: '6px',
-                      background: '#fff',
-                      boxSizing: 'border-box'
-                    }}
-                  />
+                  <div className="space-y-2.5">
+                    {[
+                      { moedas: 30, valor: 19.90, desc: 'Ideal para 2 contatos' },
+                      { moedas: 80, valor: 44.90, desc: 'Mais popular • 5 contatos', destaque: true },
+                      { moedas: 200, valor: 99.90, desc: 'Melhor custo-benefício' },
+                    ].map((pacote, idx) => (
+                      <div 
+                        key={idx}
+                        onClick={() => setPacoteSelecionado(pacote)}
+                        className={`p-4 rounded-2xl border-2 flex items-center justify-between cursor-pointer transition ${
+                          pacoteSelecionado?.moedas === pacote.moedas
+                            ? 'border-[#f15a24] bg-orange-50/50'
+                            : 'border-slate-200 hover:border-orange-200'
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-black text-slate-900 text-lg">{pacote.moedas} Moedas</span>
+                            {pacote.destaque && (
+                              <span className="bg-[#f15a24] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                Destaque
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs text-slate-400 block mt-0.5">{pacote.desc}</span>
+                        </div>
+                        <span className="font-extrabold text-[#ce4d17] text-base">
+                          R$ {pacote.valor.toFixed(2).replace('.', ',')}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
                   <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(chavePix);
-                      alert('Chave PIX copiada!');
-                    }}
-                    style={{
-                      marginTop: '8px',
-                      width: '100%',
-                      background: '#f1f5f9',
-                      border: '1px solid #cbd5e1',
-                      padding: '8px',
-                      borderRadius: '6px',
-                      fontWeight: 'bold',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      color: '#334155'
-                    }}
+                    disabled={!pacoteSelecionado || processandoPix}
+                    onClick={() => handleGerarPix(pacoteSelecionado!.moedas, pacoteSelecionado!.valor)}
+                    className="w-full mt-2 bg-[#f15a24] hover:bg-[#ce4d17] active:scale-98 text-white font-black py-3.5 px-4 rounded-2xl text-sm shadow-md transition disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
                   >
-                    📋 Copiar Código PIX
+                    <QrCode className="w-4 h-4" />
+                    {processandoPix ? 'Gerando Pix...' : 'Pagar com Pix'}
+                  </button>
+                </>
+              ) : (
+                /* TELA COM O PIX COPIA E COLA */
+                <div className="text-center space-y-4 py-2">
+                  <div className="bg-emerald-50 text-emerald-700 p-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    Código Pix Gerado com Sucesso!
+                  </div>
+
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <span className="text-[11px] text-slate-400 font-bold block uppercase mb-1">Código Pix Copia e Cola</span>
+                    <p className="text-xs font-mono text-slate-600 break-all select-all p-2 bg-white rounded-lg border border-slate-200">
+                      {dadosPix.codigoPix}
+                    </p>
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(dadosPix.codigoPix);
+                        alert('Código Pix copiado!');
+                      }}
+                      className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-bold text-[#f15a24] hover:underline"
+                    >
+                      <Copy className="w-3.5 h-3.5" /> Copiar Código
+                    </button>
+                  </div>
+
+                  {/* Botão de Simulação de Pagamento */}
+                  <button
+                    onClick={handleConfirmarPagamento}
+                    className="w-full bg-[#25D366] hover:bg-[#20bd5a] active:scale-98 text-white font-black py-3.5 px-4 rounded-2xl text-sm shadow-md transition cursor-pointer"
+                  >
+                    Confirmar Pagamento Simulado
                   </button>
                 </div>
+              )}
+            </div>
 
-                <button
-                  onClick={handleConfirmarPagamento}
-                  style={{
-                    width: '100%',
-                    background: '#22c55e',
-                    color: '#fff',
-                    border: 'none',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    fontSize: '14px'
-                  }}
-                >
-                  ✅ Confirmar Pagamento (Simular)
-                </button>
-              </>
-            )}
           </div>
         </div>
       )}
+
     </div>
   );
-};
+}

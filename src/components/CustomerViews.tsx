@@ -1,282 +1,406 @@
-import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Star, Wrench, Zap, Droplets, Paintbrush, PlusCircle, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Service, Profissional } from '../types';
+import React, { useState } from 'react';
+import { 
+  Search, 
+  MapPin, 
+  Star, 
+  ArrowLeft, 
+  X, 
+  CheckCircle2, 
+  ShieldCheck, 
+  Briefcase,
+  Camera,
+  Send
+} from 'lucide-react';
+import { Service } from '../types';
 
-interface CustomerViewProps {
-  services: Service[]; 
-  loading: boolean; 
-  searchTerm: string; 
-  setSearchTerm: (value: string) => void; 
-  onBack: () => void; 
+interface CustomerViewsProps {
+  services: Service[];
+  loading: boolean;
+  searchTerm: string;
+  setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
+  onBack: () => void;
 }
 
-export function CustomerView({ 
-  loading: loadingProp, 
-  searchTerm, 
-  setSearchTerm, 
-  onBack 
-}: CustomerViewProps) { 
+export default function CustomerView({
+  services,
+  loading,
+  searchTerm,
+  setSearchTerm,
+  onBack
+}: CustomerViewsProps) {
+  const [profissionalSelecionado, setProfissionalSelecionado] = useState<any | null>(null);
+  const [modalOrcamentoAberto, setModalOrcamentoAberto] = useState(false);
+  const [enviando, setEnviando] = useState(false);
 
-  const [listaProfissionais, setListaProfissionais] = useState<Profissional[]>([]);
-  const [carregandoInterno, setCarregandoInterno] = useState(true);
-  
-  // Estado para controlar a abertura/fechamento do Modal de Solicitação
-  const [modalAberto, setModalAberto] = useState(false);
+  // Estados do formulário de solicitação de orçamento
+  const [formPedido, setFormPedido] = useState({
+    cliente_nome: '',
+    cliente_telefone: '',
+    especialidade: 'Pintor',
+    foto_url: '',
+    descricao: ''
+  });
 
-  // Estados dos campos do formulário do cliente
-  const [nomeCliente, setNomeCliente] = useState('');
-  const [telefoneCliente, setTelefoneCliente] = useState('');
-  const [especialidadeServico, setEspecialidadeServico] = useState('Pintura');
-  const [descricaoServico, setDescricaoServico] = useState('');
-  const [enviandoPedido, setEnviandoPedido] = useState(false);
-
-  // Busca a lista de profissionais cadastrados
-  useEffect(() => {
-    fetch('http://localhost:5000/profissionais')
-      .then(res => res.json())
-      .then(dados => {
-        console.log("DADOS QUE CHEGARAM DO BANCO:", dados);
-        setListaProfissionais(dados);
-        setCarregandoInterno(false);
-      })
-      .catch(err => {
-        console.error("Erro ao buscar profissionais:", err);
-        setCarregandoInterno(false);
-      });
-  }, []);
-
-  // Filtra a lista baseada no que o cliente digita na barra de busca
-  const profissionaisFiltrados = listaProfissionais.filter((p: any) => 
-    p.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.especialidade?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const getCategoryIcon = (categoria: string) => { 
-    switch ((categoria || '').toLowerCase()) { 
-      case 'elétrica': 
-      case 'eletrica': return <Zap className="w-5 h-5 text-yellow-500" />; 
-      case 'hidráulica': 
-      case 'hidraulica': return <Droplets className="w-5 h-5 text-blue-500" />; 
-      case 'pintura': return <Paintbrush className="w-5 h-5 text-purple-500" />; 
-      default: return <Wrench className="w-5 h-5 text-gray-500" />; 
-    }
-  };
-
-  // Função para enviar o pedido do cliente ao backend (Corrigido para o IP .5)
-  const handleCriarPedido = async (e: React.FormEvent) => {
+  const handleSubmitPedido = async (e: React.FormEvent) => {
     e.preventDefault();
-    setEnviandoPedido(true);
+    setEnviando(true);
 
     try {
-      const response = await fetch('http://localhost:5000/pedidos-servico', {
+      const response = await fetch('http://192.168.5.109:5000/pedidos-servico', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          cliente_nome: nomeCliente,
-          cliente_telefone: telefoneCliente,
-          categoria: especialidadeServico,
-          descricao: descricaoServico,
-          cidade: 'Assis',
-        }),
+          cliente_nome: formPedido.cliente_nome,
+          cliente_telefone: formPedido.cliente_telefone,
+          especialidade: formPedido.especialidade,
+          foto_url: formPedido.foto_url,
+          descricao: formPedido.descricao,
+          cidade: 'Assis'
+        })
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        alert('🎉 Pedido publicado com sucesso! Os profissionais de Assis entrarão em contato via WhatsApp.');
-        setNomeCliente('');
-        setTelefoneCliente('');
-        setDescricaoServico('');
-        setModalAberto(false);
+        alert('Seu pedido foi publicado! Os prestadores de Assis já podem visualizar no mural.');
+        setFormPedido({
+          cliente_nome: '',
+          cliente_telefone: '',
+          especialidade: 'Pintor',
+          foto_url: '',
+          descricao: ''
+        });
+        setModalOrcamentoAberto(false);
       } else {
-        alert('Erro ao publicar o pedido. Verifique as informações.');
+        alert('Erro ao enviar pedido: ' + (data.erro || 'Falha no envio'));
       }
     } catch (error) {
-      console.error('Erro na requisição:', error);
-      alert('Erro de conexão com o servidor.');
+      alert('Erro ao conectar com o servidor. Verifique se a API está rodando.');
     } finally {
-      setEnviandoPedido(false);
+      setEnviando(false);
     }
   };
 
+  const profissionaisFiltrados = (services || []).filter((prof: any) => {
+    const nome = prof.nome?.toLowerCase() || '';
+    const especialidade = prof.especialidade?.toLowerCase() || '';
+    const termo = searchTerm.toLowerCase();
+    return nome.includes(termo) || especialidade.includes(termo);
+  });
+
   return (
-    <>
-      <header className="servi-header bg-white border-b border-slate-200">
-        <div className="servi-container h-16 flex items-center justify-between px-4 max-w-6xl mx-auto">
-          <div className="flex items-center gap-2">
-            <div className="bg-indigo-600 p-2 rounded-lg">
-              <Wrench className="text-white w-6 h-6" />
-            </div>
-            <h1 className="text-xl font-bold text-slate-900">ServiConnect</h1>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setModalAberto(true)} 
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-4 py-2 rounded-lg transition"
-            >
-              <PlusCircle className="w-4 h-4" />
-              Pedir Orçamento
-            </button>
-            <button onClick={onBack} className="text-sm font-bold text-slate-600 hover:text-indigo-600">
-              Voltar
-            </button>
-          </div>
-        </div>
+    <div className="min-h-screen bg-slate-50 text-slate-800 pb-16">
+      
+      {/* HEADER MOBILE RESPONSIVO */}
+      <header className="sticky top-0 z-30 bg-[#f15a24] text-white px-4 py-3 shadow-md flex items-center justify-between">
+        <button 
+          onClick={onBack} 
+          className="p-1.5 -ml-1 rounded-full hover:bg-black/10 active:scale-95 transition cursor-pointer"
+          title="Voltar"
+        >
+          <ArrowLeft className="w-6 h-6" />
+        </button>
+
+        <h1 className="text-xl font-extrabold tracking-tight">ServiConnect</h1>
+
+        <button 
+          onClick={onBack}
+          className="bg-white/20 hover:bg-white/30 active:scale-95 text-xs font-bold py-1.5 px-3 rounded-full border border-white/30 backdrop-blur-sm transition cursor-pointer"
+        >
+          Início
+        </button>
       </header>
 
-      <main className="servi-container py-8 px-4 max-w-6xl mx-auto">
-        {/* Banner de Ação para o Cliente */}
-        <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl p-6 md:p-8 mb-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-lg">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-extrabold mb-2">Precisa de um orçamento presencial?</h2>
-            <p className="text-indigo-100 text-sm md:text-base">
-              Publique o que você precisa e receba o contato dos melhores profissionais de Assis diretamente no seu WhatsApp!
-            </p>
-          </div>
+      {/* BANNER PRINCIPAL LARANJA */}
+      <div className="p-4">
+        <div className="bg-gradient-to-br from-[#f15a24] to-[#ce4d17] rounded-3xl p-5 text-white shadow-lg relative overflow-hidden">
+          <h2 className="text-xl font-black mb-2 leading-tight">
+            Precisa de um orçamento presencial?
+          </h2>
+          <p className="text-orange-100 text-xs mb-4 leading-relaxed">
+            Receba o contato direto dos melhores prestadores avaliados de Assis.
+          </p>
           <button 
-            onClick={() => setModalAberto(true)}
-            className="whitespace-nowrap bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-bold px-6 py-3 rounded-xl transition shadow"
+            onClick={() => setModalOrcamentoAberto(true)}
+            className="w-full bg-white text-[#ce4d17] font-extrabold py-3 px-4 rounded-xl text-sm shadow-md active:scale-98 transition flex items-center justify-center cursor-pointer"
           >
-            Solicitar Orçamento Agora
+            Solicitar Orçamento Geral
           </button>
         </div>
+      </div>
 
-        <div className="mb-8 text-center max-w-2xl mx-auto">
-          <h2 className="text-3xl font-extrabold mb-2 text-slate-900">
-            Ou busque diretamente por profissionais
-          </h2>
-          <div className="relative mt-6">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-            <input 
-              type="text"
-              placeholder="O que você precisa hoje? Ex: Pintor, Eletricista..."
-              className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-slate-900"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+      {/* BARRA DE PESQUISA */}
+      <div className="px-4 mb-5">
+        <h3 className="text-lg font-extrabold text-slate-900 mb-2">
+          Buscar profissionais
+        </h3>
+        <div className="relative">
+          <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input 
+            type="text"
+            placeholder="Ex: Pintor, Eletricista, Encanador..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-white pl-11 pr-4 py-3 rounded-2xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#f15a24] shadow-sm"
+          />
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <AnimatePresence mode="popLayout">
-            {profissionaisFiltrados.map((profissional) => (
-              <motion.div key={profissional.id} layout className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="bg-slate-50 p-3 rounded-xl">
-                    {getCategoryIcon(profissional.especialidade)}
-                  </div>
-                  <div className="flex items-center gap-1 bg-amber-50 text-amber-700 text-xs font-bold px-2.5 py-1 rounded-full">
-                    <Star className="w-3.5 h-3.5 fill-current text-amber-500" /> 4.9
-                  </div>
-                </div>
-                
-                <h4 className="text-lg font-bold mb-1 text-slate-900">{profissional.nome}</h4>
-                <p className="text-sm text-slate-500 mb-4 capitalize">{profissional.especialidade}</p>
-                
-                <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Atendimento</span>
-                    <span className="text-sm font-bold text-slate-700">📍 Assis e Região</span>
-                  </div>
-                  <button 
-                    onClick={() => setModalAberto(true)} 
-                    className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-bold text-sm px-4 py-2 rounded-lg transition"
-                  >
-                    Pedir Orçamento
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-      </main>
-
-      {/* MODAL DE SOLICITAÇÃO DE ORÇAMENTO */}
-      {modalAberto && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
-            <button 
-              onClick={() => setModalAberto(false)}
-              className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 p-1"
+      {/* LISTAGEM DE PROFISSIONAIS */}
+      <div className="px-4 space-y-3.5">
+        {loading ? (
+          <p className="text-center py-8 text-slate-400 text-sm">Carregando profissionais...</p>
+        ) : profissionaisFiltrados.length === 0 ? (
+          <p className="text-center py-8 text-slate-400 text-sm">Nenhum profissional cadastrado.</p>
+        ) : (
+          profissionaisFiltrados.map((prof: any) => (
+            <div 
+              key={prof.id}
+              onClick={() => setProfissionalSelecionado(prof)}
+              className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:border-orange-200 cursor-pointer active:scale-[0.99] transition"
             >
-              <X className="w-5 h-5" />
-            </button>
+              <div className="flex items-center gap-3.5">
+                <div className="relative flex-shrink-0">
+                  {prof.foto_url ? (
+                    <img 
+                      src={prof.foto_url} 
+                      alt={prof.nome} 
+                      className="w-14 h-14 rounded-full object-cover border-2 border-orange-100 shadow-inner" 
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-full bg-orange-100 text-[#f15a24] flex items-center justify-center font-bold text-lg border-2 border-orange-200">
+                      {prof.nome?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-0.5 text-white">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  </div>
+                </div>
 
-            <h3 className="text-2xl font-extrabold text-slate-900 mb-1">Solicitar Orçamento</h3>
-            <p className="text-sm text-slate-500 mb-6">Descreva o serviço para os profissionais da sua região responderem.</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-bold text-slate-900 text-base truncate">{prof.nome}</h4>
+                    <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                      <span className="text-xs font-black text-amber-700">4.9</span>
+                    </div>
+                  </div>
 
-            <form onSubmit={handleCriarPedido} className="space-y-4">
+                  <p className="text-xs font-semibold text-[#ce4d17] mb-1">{prof.especialidade}</p>
+
+                  <div className="flex items-center gap-1 text-[11px] text-slate-400">
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span>Assis e Região</span>
+                    <span className="mx-1">•</span>
+                    <span className="text-slate-500 font-medium">
+                      {prof.total_servicos || prof.servicos_realizados?.length || 0} feitos
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-end">
+                <span className="text-xs font-bold text-orange-600 hover:underline">
+                  Ver portfólio e serviços realizados →
+                </span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* MODAL 1: FORMULÁRIO PARA SOLICITAR ORÇAMENTO (POSTAR O PROBLEMA) */}
+      {modalOrcamentoAberto && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-200">
+            
+            <div className="p-4 bg-gradient-to-r from-[#f15a24] to-[#ce4d17] text-white flex items-center justify-between">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Seu Nome:</label>
+                <h3 className="font-extrabold text-lg leading-tight">Descreva o que você precisa</h3>
+                <p className="text-xs text-orange-100">Profissionais qualificados de Assis entrarão em contato</p>
+              </div>
+              <button 
+                onClick={() => setModalOrcamentoAberto(false)} 
+                className="p-1.5 rounded-full bg-black/20 hover:bg-black/30 active:scale-95 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitPedido} className="p-5 overflow-y-auto space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Seu Nome</label>
                 <input 
                   type="text" 
                   required
-                  placeholder="Ex: João da Silva"
-                  className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                  value={nomeCliente}
-                  onChange={(e) => setNomeCliente(e.target.value)}
+                  placeholder="Ex: João Silva" 
+                  value={formPedido.cliente_nome}
+                  onChange={(e) => setFormPedido({...formPedido, cliente_nome: e.target.value})}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#f15a24]"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">WhatsApp/Telefone:</label>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Seu WhatsApp / Telefone</label>
                 <input 
-                  type="text" 
+                  type="tel" 
                   required
-                  placeholder="Ex: 18999998888"
-                  className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                  value={telefoneCliente}
-                  onChange={(e) => setTelefoneCliente(e.target.value)}
+                  placeholder="Ex: (18) 99999-9999" 
+                  value={formPedido.cliente_telefone}
+                  onChange={(e) => setFormPedido({...formPedido, cliente_telefone: e.target.value})}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#f15a24]"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Categoria:</label>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Tipo de Profissional</label>
                 <select 
-                  className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                  value={especialidadeServico}
-                  onChange={(e) => setEspecialidadeServico(e.target.value)}
+                  value={formPedido.especialidade}
+                  onChange={(e) => setFormPedido({...formPedido, especialidade: e.target.value})}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#f15a24]"
                 >
-                  <option value="Pintura">Pintura</option>
-                  <option value="Eletrica">Elétrica</option>
-                  <option value="Hidraulica">Hidráulica</option>
-                  <option value="Marcenaria">Marcenaria</option>
-                  <option value="Limpeza">Limpeza / Diarista</option>
+                  <option value="Pintor">Pintor</option>
+                  <option value="Eletricista">Eletricista</option>
+                  <option value="Encanador">Encanador</option>
+                  <option value="Pedreiro">Pedreiro</option>
+                  <option value="Marceneiro">Marceneiro</option>
+                  <option value="Ar Condicionado">Ar Condicionado</option>
+                  <option value="Geral">Outros / Serviços Gerais</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Descrição do Serviço:</label>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1 flex items-center gap-1">
+                  <Camera className="w-3.5 h-3.5 text-orange-600" /> Foto do Problema (Link / Imagem)
+                </label>
+                <input 
+                  type="url" 
+                  placeholder="https://exemplo.com/foto-parede.jpg" 
+                  value={formPedido.foto_url}
+                  onChange={(e) => setFormPedido({...formPedido, foto_url: e.target.value})}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#f15a24]"
+                />
+                <span className="text-[11px] text-slate-400">Opcional: cole o link de uma imagem para os prestadores verem.</span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Descreva o Problema</label>
                 <textarea 
                   required
                   rows={3}
-                  placeholder="Ex: Preciso pintar uma sala de 4x4m e trocar 2 tomadas que pararam de funcionar."
-                  className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none"
-                  value={descricaoServico}
-                  onChange={(e) => setDescricaoServico(e.target.value)}
+                  placeholder="Ex: Preciso pintar uma sala de 20m² e passar massa corrida em uma parede que está descascando..."
+                  value={formPedido.descricao}
+                  onChange={(e) => setFormPedido({...formPedido, descricao: e.target.value})}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#f15a24]"
                 />
               </div>
 
-              <div className="flex gap-3 justify-end pt-2">
+              <div className="pt-2">
                 <button 
-                  type="button" 
-                  onClick={() => setModalAberto(false)}
-                  className="px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-bold text-sm hover:bg-slate-50 transition"
+                  type="submit"
+                  disabled={enviando}
+                  className="w-full bg-[#f15a24] hover:bg-[#ce4d17] active:scale-98 text-white font-extrabold py-3.5 px-4 rounded-xl text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  Cancelar
-                </button>
-                <button 
-                  type="submit" 
-                  disabled={enviandoPedido}
-                  className="px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition shadow"
-                >
-                  {enviandoPedido ? 'Enviando...' : 'Publicar Pedido'}
+                  <Send className="w-4 h-4" />
+                  {enviando ? 'Publicando...' : 'Postar Pedido para Prestadores'}
                 </button>
               </div>
             </form>
+
           </div>
         </div>
       )}
-    </>
+
+      {/* MODAL 2: DETALHES E PORTFÓLIO DO PROFISSIONAL */}
+      {profissionalSelecionado && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-200">
+            
+            <div className="p-4 bg-gradient-to-r from-[#f15a24] to-[#ce4d17] text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {profissionalSelecionado.foto_url ? (
+                  <img 
+                    src={profissionalSelecionado.foto_url} 
+                    alt="" 
+                    className="w-12 h-12 rounded-full object-cover border-2 border-white"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-white text-[#f15a24] flex items-center justify-center font-bold">
+                    {profissionalSelecionado.nome?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <h3 className="font-extrabold text-lg leading-snug">{profissionalSelecionado.nome}</h3>
+                  <p className="text-xs text-orange-100 flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" /> Profissional Verificado em Assis
+                  </p>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setProfissionalSelecionado(null)} 
+                className="p-1 rounded-full bg-black/20 hover:bg-black/30 active:scale-95 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 overflow-y-auto space-y-4">
+              <div className="flex items-center justify-between text-xs bg-orange-50 p-3 rounded-2xl border border-orange-100">
+                <span className="font-medium text-slate-600">Total de trabalhos registrados:</span>
+                <span className="font-bold text-[#ce4d17] text-sm">
+                  {profissionalSelecionado.total_servicos || profissionalSelecionado.servicos_realizados?.length || 0} concluídos
+                </span>
+              </div>
+
+              <div>
+                <h4 className="font-extrabold text-sm text-slate-900 mb-2 flex items-center gap-1.5">
+                  <Briefcase className="w-4 h-4 text-[#f15a24]" />
+                  Serviços já realizados
+                </h4>
+
+                <div className="space-y-3">
+                  {profissionalSelecionado.servicos_realizados && profissionalSelecionado.servicos_realizados.length > 0 ? (
+                    profissionalSelecionado.servicos_realizados.map((serv: any, index: number) => (
+                      <div key={serv.id || index} className="border border-slate-100 rounded-2xl p-3 bg-slate-50">
+                        {serv.imagemUrl && (
+                          <img 
+                            src={serv.imagemUrl} 
+                            alt={serv.titulo} 
+                            className="w-full h-36 object-cover rounded-xl mb-2"
+                          />
+                        )}
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-800 text-sm">{serv.titulo}</span>
+                          {serv.data && <span className="text-[11px] text-slate-400">{serv.data}</span>}
+                        </div>
+                        {serv.descricao && (
+                          <p className="text-xs text-slate-600 mt-1 leading-relaxed">{serv.descricao}</p>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-6 border border-dashed border-slate-200 rounded-2xl">
+                      <p className="text-xs text-slate-400">Nenhum serviço anexado no portfólio ainda.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 bg-white">
+              <button 
+                onClick={() => setProfissionalSelecionado(null)}
+                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-4 rounded-2xl text-sm transition cursor-pointer"
+              >
+                Fechar Portfólio
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+    </div>
   );
 }

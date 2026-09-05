@@ -1,54 +1,52 @@
 import { useState, useEffect } from 'react';
-import { Wrench, Zap, Droplets, Paintbrush, Search, MapPin, Star } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
 import { Service } from './types';
 import RoleSelection from './components/RoleSelection';
-import { CustomerView } from './components/CustomerViews';
-import { ProviderView } from './components/ProviderView';
+import CustomerView from './components/CustomerViews';
+import ProviderView from './components/ProviderView';
 import { AdminView } from './components/AdminView';
 
 export default function App() {
-  // ESTADOS: Variaveis que o React monitora para atualizar a tela
-  const [services, setServices] = useState<Service[]>([]); // Guarda a lista de profissionais no banco de dados
-  const [loading, setLoading] = useState(true); // controla se a mensagem de "carregando" aparece
-  const [searchTerm, setSearchTerm] = useState(''); // Guarda o texto da barra de busca
-  const [userRole, setUserRole] = useState<number>(0); // 0=escolha, 1=cliente, 2=profissional
+  // ESTADOS
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [userRole, setUserRole] = useState<number>(0); // 0 = início, 1 = cliente, 2 = prestador
   const [profissionalLogado, setProfissionalLogado] = useState<any>(null);
 
-  // Função executada quando o profissional faz login com sucesso
+  // Função executada após o login bem-sucedido do prestador
   const handleLoginSucesso = (respostaLogin: any) => {
-    // 1. Salva o token JWT no localStorage se ele tiver vindo do backend
+    // 1. Salva o token JWT para compras de leads e rotas autenticadas
     if (respostaLogin.token) {
-      localStorage.setItem('@ServiConnect:token', respostaLogin.token);
+      localStorage.setItem('token', respostaLogin.token);
     }
 
-    // 2. Define o profissional logado (pega o objeto do profissional ou a resposta completa)
+    // 2. Extrai o objeto do profissional (seja resposta direta ou aninhada)
     const dadosProfissional = respostaLogin.profissional || respostaLogin;
     setProfissionalLogado(dadosProfissional);
 
-    // 3. Muda a tela para o Painel do Prestador (userRole = 2)
+    // 3. Direciona para o painel do prestador
     setUserRole(2);
-
     console.log("Bem-vindo,", dadosProfissional.nome);
   };
 
-
+  // Busca lista de prestadores cadastrados no backend
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await fetch('http://localhost:5000/profissionais'); // try "tente fazer isso", se a internet cair, ele pula para o cath
-        const data = await response.json(); // transforma esse texto em um objeto javascript
-        setServices(data); //atualiza a memoria do app com dados reais
-      } catch (error) { // se algo der errado no "try", ele cai aqui
-        console.error('Erro ao buscar serviços:', error); //mostra o erro no console do navegador para o dev
-      } finally { //esse bloco roda SEMPRE, dando certo ou errado
-        setLoading(false); //desliga o aviso de carregando, pois a tentativa de busca terminou
+        const response = await fetch('http://192.168.5.109:5000/profissionais');
+        const data = await response.json();
+        setServices(data);
+      } catch (error) {
+        console.error('Erro ao buscar serviços:', error);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchServices(); //chama a funcao que criamos acima para ela comecar a trabalhar
-  }, []); //o[] vazio diz ao react: "só execute este useEffect uma vez, quando o app abrir"
 
-return (
+    fetchServices();
+  }, []);
+
+  return (
   // div principal: min-h-screen ocupa a tela toda, bg-slate-50 é o fundo cinza claro, font-sans é a fonte limpa
   <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
     {/*se o papel do usuario for 0 (inicio), desenha o componente de selecao de perfil */}
